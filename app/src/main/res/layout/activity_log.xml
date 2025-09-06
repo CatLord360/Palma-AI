@@ -1,0 +1,105 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".activities.LogActivity"
+    android:background="@color/green">
+    <RelativeLayout
+        android:id="@+id/Layout_Activity"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="50dp"
+        android:background="@color/black">
+        <ImageView
+            android:id="@+id/Image_Application"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_palma"
+            android:contentDescription="@string/ContentDescription_Application"/>
+
+        <TextView
+            android:id="@+id/Label_Application"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/Image_Application"
+            android:layout_centerHorizontal="true"
+            android:textSize="30sp"
+            android:text="@string/app_name"
+            android:textColor="@color/green"/>
+
+        <RelativeLayout
+            android:id="@+id/Layout_Log"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="25dp"
+            android:layout_marginTop="25dp"
+            android:layout_below="@id/Label_Application">
+            <TextView
+                android:id="@+id/Label_Email"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:text="@string/Label_Email"
+                android:textColor="@color/green"/>
+
+            <EditText
+                android:id="@+id/Input_Email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/Label_Email"
+                android:inputType="textEmailAddress"
+                android:autofillHints="emailAddress"
+                android:textSize="20sp"
+                android:hint="@string/Hint_Email"
+                android:textColorHint="@color/black"
+                android:background="@color/green"/>
+
+            <TextView
+                android:id="@+id/Label_Password"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Input_Email"
+                android:textSize="18sp"
+                android:text="@string/Label_Password"
+                android:textColor="@color/green"/>
+
+            <EditText
+                android:id="@+id/Input_Password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Input_Email"
+                android:layout_toEndOf="@id/Label_Password"
+                android:inputType="textPassword"
+                android:autofillHints="password"
+                android:textSize="20sp"
+                android:hint="@string/Hint_Password"
+                android:textColorHint="@color/black"
+                android:background="@color/green"/>
+
+            <Button
+                android:id="@+id/Butt_Log"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="50dp"
+                android:layout_below="@id/Input_Password"
+                android:textSize="18sp"
+                android:text="@string/Butt_Log"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/green"/>
+
+            <Button
+                android:id="@+id/Butt_Sign"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Butt_Log"
+                android:textSize="18sp"
+                android:text="@string/Butt_Sign"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/green"/>
+        </RelativeLayout>
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

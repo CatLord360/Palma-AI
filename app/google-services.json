@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "906857337610",
+    "firebase_url": "https://palma-87be0-default-rtdb.firebaseio.com",
+    "project_id": "palma-87be0",
+    "storage_bucket": "palma-87be0.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906857337610:android:8900189e92f86512f520f3",
+        "android_client_info": {
+          "package_name": "com.example.palma"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "906857337610-q4rh2s5bu901iabdiu7h1gbj4866m0ep.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCyUxY4kX5EDLuQOaEgw_LR6IvBgWsN38c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "906857337610-q4rh2s5bu901iabdiu7h1gbj4866m0ep.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,50 @@
+<resources>
+    <string name="app_name">Palma</string>
+
+    //The TEXTVIEW-LABEL STRING-VARIABLE/S:
+    <string name="Label_Username"><b>Username</b></string>
+    <string name="Label_Gender"><b>Gender</b></string>
+    <string name="Label_Birthdate"><b>Birthdate</b></string>
+    <string name="Label_Mobile"><b>Mobile</b></string>
+    <string name="Label_Email"><b>Email</b></string>
+    <string name="Label_Password"><b>Password</b></string>
+    <string name="Label_Repeat"><b>Repeat Password</b></string>
+    <string name="Label_Message"><b>Message</b></string>
+    <string name="Label_Date"><b>Date</b></string>
+    <string name="Label_Time"><b>Time</b></string>
+
+    //The TEXTVIEW-OUTPUT STRING-VARIABLE/S:
+    <string name="Output_Username"><b>Username</b></string>
+    <string name="Output_Mobile">mobile</string>
+    <string name="Output_Email">email</string>
+    <string name="Output_Contact"><b>Contact</b></string>
+    <string name="Output_Message">message</string>
+    <string name="Output_Date">date</string>
+    <string name="Output_Time">time</string>
+
+    //The EDITTEXT-HINT STRING-VARIABLE/S:
+    <string name="Hint_Username"><i>username</i></string>
+    <string name="Hint_Birthdate"><i>select date</i></string>
+    <string name="Hint_Mobile"><i>mobile</i></string>
+    <string name="Hint_Email"><i>email</i></string>
+    <string name="Hint_Password"><i>password</i></string>
+    <string name="Hint_Repeat"><i>repeat password</i></string>
+    <string name="Hint_Message"><i>message</i></string>
+
+    //The SPINNER STRING-VARIABLE/S:
+    <string-array name="Option_Gender">
+        <item>male</item>
+        <item>female</item>
+    </string-array>
+
+    //The BUTTON-LABEL STRING-VARIABLE/S:
+    <string name="Butt_Log"><b>log in</b></string>
+    <string name="Butt_Sign"><b>sign in</b></string>
+    <string name="Butt_Message"><b>send</b></string>
+    <string name="Butt_Delete"><b>delete</b></string>
+    <string name="Butt_Exit"><b>x</b></string>
+
+    //The CONTENT-DESCRIPTION STRING-VARIABLE/S:
+    <string name="ContentDescription_Application"><b>Display Image:</b> <i>Application Logo</i></string>
+    <string name="ContentDescription_Contact"><b>Display Image:</b> <i>Contact Logo</i></string>
+</resources>

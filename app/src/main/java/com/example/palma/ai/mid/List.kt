@@ -1,0 +1,148 @@
+package com.example.palma.ai.mid
+
+import com.example.palma.models.Message
+import com.example.palma.models.User
+import com.google.firebase.Firebase
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.ValueEventListener
+import com.google.firebase.database.database
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+
+//START of CLASS: List
+class List{
+    private val database = Firebase.database
+    private val aiKey = "AI - 4"
+
+    //START of FUNCTION: writeList
+    fun writeList(userKey: String, messageKey: String, message: String){
+        val list = message.lowercase().trim().split(" ")
+
+        //START of IF-STATEMENT:
+        if(list[1] == "command"){
+            writeCommand(userKey, messageKey)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(list[1] == "contact"){
+            writeContact(userKey, messageKey)
+        }//END of IF-STATEMENT
+    }//END of FUNCTION: writeList
+
+    //START of FUNCTION: writeCommand
+    private fun writeCommand(userKey: String, messageKey: String){
+        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+
+        userReference.get().addOnSuccessListener{ snapshot ->
+            val user = snapshot.getValue(User::class.java)
+            val list = arrayOf(
+                "Don't think of using any of these ${user?.username}",
+                "#list command",
+                "#list contact",
+                "#compute sum of [number] [number]...",
+                "#compute difference of [number] [number]...",
+                "#compute product of [number] [number]...",
+                "#compute quotient of [number] [divisor]",
+                "#compute modulus of [number] [divisor]",
+                "#compute average of [number] [number]...",
+                "#compute square of [number]",
+                "#compute cube of [number]",
+                "#compute factorial of [number]",
+                "#compute gcd of [number] [number]",
+                "#compute lcm of [number] [number]",
+                "#compute percentage of [whole] [part]",
+                "#compute absolute of [number]",
+                "#compute round of [number]",
+                "Commanding me is evidence of how fucking useless you are ${user?.username}"
+            )
+
+            messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    var index = 1
+                    var key = "message$index"
+
+                    //START of WHILE-LOOP:
+                    while(snapshot.hasChild(key)){
+                        index++
+                        key = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of FOR-LOOP:
+                    for(i in 0 until list.size){
+                        val current = LocalDateTime.now()
+                        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+                        messageReference.child(key).setValue(Message(aiKey, date, time, list[i]))
+
+                        index++
+                    }//END of FOR-LOOP
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION:
+
+    //START of FUNCTION: writeContact
+    private fun writeContact(userKey: String, messageKey: String) {
+        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+        val contactReference = database.getReference("Palma/User/$userKey/Contact")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+
+        userReference.get().addOnSuccessListener { snapshot ->
+            val user = snapshot.getValue(User::class.java)
+
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(messageSnapshot: DataSnapshot){
+                    contactReference.get().addOnSuccessListener { contactSnapshot ->
+                        val contactList = mutableListOf<String>()
+                        contactList.add("List of ${user?.username}\'s Contact/s:")
+
+                        //START of FOR-LOOP:
+                        for(contact in contactSnapshot.children){
+                            val username = contact.child("username").getValue(String::class.java) ?: ""
+                            val type = contact.child("type").getValue(String::class.java) ?: ""
+                            val mobile = contact.child("mobile").getValue(String::class.java) ?: ""
+                            val email = contact.child("email").getValue(String::class.java) ?: ""
+
+                            val contactString = "$username $type $mobile $email"
+                            contactList.add(contactString)
+                        }//END of FOR-LOOP
+
+                        var index = 1
+                        var key = "message$index"
+
+                        //START of WHILE-LOOP:
+                        while(snapshot.hasChild(key)){
+                            index++
+                            key = "message$index"
+                        }//END of WHILE-LOOP
+
+                        //START of FOR-LOOP:
+                        for(contactInfo in contactList){
+                            val current = LocalDateTime.now()
+                            val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                            val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+                            val message = Message(aiKey, date, time, contactInfo)
+                            messageReference.child(key).setValue(message)
+                            index++
+                        }//END of FOR-LOOP
+                    }
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError) {
+                }
+                //END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: writeContact
+}//END of CLASS: List

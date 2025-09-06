@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+    <RelativeLayout
+        android:id="@+id/Layout_Dialog"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/black"
+        tools:ignore="MissingConstraints">
+        <RelativeLayout
+            android:id="@+id/Layout_Header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/green">
+            <ImageView
+                android:id="@+id/Image_Contact"
+                android:layout_width="50dp"
+                android:layout_height="50dp"
+                android:src="@drawable/ic_user"
+                android:contentDescription="@string/ContentDescription_Contact"/>
+
+            <TextView
+                android:id="@+id/Output_Username"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/Image_Contact"
+                android:layout_centerVertical="true"
+                android:textSize="24sp"
+                android:text="@string/Output_Username"
+                android:textColor="@color/black"/>
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/Layout_Message"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/Layout_Header"
+            android:layout_marginHorizontal="25dp">
+            <TextView
+                android:id="@+id/Label_Date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="18sp"
+                android:text="@string/Label_Date"
+                android:textColor="@color/green"/>
+
+            <TextView
+                android:id="@+id/Output_Date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/Label_Date"
+                android:textSize="18sp"
+                android:text="@string/Output_Date"
+                android:textColor="@color/green"/>
+
+            <TextView
+                android:id="@+id/Label_Time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Output_Date"
+                android:textSize="18sp"
+                android:text="@string/Label_Time"
+                android:textColor="@color/green"/>
+
+            <TextView
+                android:id="@+id/Output_Time"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Output_Date"
+                android:layout_toEndOf="@id/Label_Time"
+                android:textSize="18sp"
+                android:text="@string/Output_Time"
+                android:textColor="@color/green"/>
+
+            <TextView
+                android:id="@+id/Label_Message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Output_Time"
+                android:textSize="18sp"
+                android:text="@string/Label_Message"
+                android:textColor="@color/green"/>
+
+            <TextView
+                android:id="@+id/Output_Message"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Output_Time"
+                android:layout_toEndOf="@id/Label_Message"
+                android:textSize="18sp"
+                android:text="@string/Output_Message"
+                android:textColor="@color/green"/>
+
+            <Button
+                android:id="@+id/Butt_Exit"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/Output_Message"
+                android:layout_centerHorizontal="true"
+                android:textSize="18sp"
+                android:text="@string/Butt_Exit"
+                android:textColor="@color/black"
+                android:backgroundTint="@color/green"/>
+        </RelativeLayout>
+    </RelativeLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
