@@ -66,22 +66,25 @@ class Rin{
 
     //START of FUNCTION: writeMessage
     fun writeMessage(userKey: String, messageKey: String, message: String){
-        val cleanedMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
-        val words = cleanedMessage.split(Regex("\\s+"))
+        val listMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
+        val words = listMessage.split(Regex("\\s+"))
 
         val stopWords = setOf("is", "am", "are", "was", "were", "do", "did", "does", "my", "the", "a", "an", "of", "in", "on", "for", "to", "what", "what's", "whats", "who", "whose", "when", "how", "can", "have", "has", "had", "i", "you", "me")
         val questionWords = setOf("who", "whose", "what", "what's", "whats", "where", "when", "why", "how", "do", "does", "did", "can", "could", "is", "are", "will", "would", "should", "shall", "give")
+        val etiquetteWords = setOf("hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
 
         val keywords = words.filter { it.isNotBlank() && it !in stopWords }
 
         val isQuery = message.trim().endsWith("?") ||
                 (words.isNotEmpty() && words[0] in questionWords) ||
                 keywords.any {
-                    it in setOf("email", "birthdate", "birthday", "mobile", "username", "gender", "color", "favorite", "remember", "know", "contact")
+                    it in setOf("email", "birthdate", "birthday", "mobile", "username", "gender", "remember", "know", "contact")
                 }
 
+        val isEtiquette = words.any { it in etiquetteWords }
+
         //START of IF-STATEMENT:
-        if(cleanedMessage.startsWith("hello") || cleanedMessage.startsWith("good") || cleanedMessage.startsWith("thank")) {
+        if(isEtiquette){
             Etiquette().writeEtiquette(userKey, messageKey, message)
         }//END of IF-STATEMENT
 

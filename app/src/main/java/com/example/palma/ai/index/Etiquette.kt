@@ -17,57 +17,85 @@ class Etiquette{
 
     //START of FUNCTION: writeEtiquette
     fun writeEtiquette(userKey: String, messageKey: String, message: String){
+        val listMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
+        val words = listMessage.split(Regex("\\s+"))
+
+        val greetingWords = setOf("hello", "hi", "hey", "greetings")
+        val goodWords = setOf("good", "morning", "afternoon", "evening", "night")
+        val gratitudeWords = setOf("thank", "thanks")
+
+        val isGreeting = words.any { it in greetingWords }
+        val isGood = words.any { it in goodWords }
+        val isGratitude = words.any { it in gratitudeWords }
+
         //START of IF-STATEMENT:
-        if(message.lowercase().trim().startsWith("hello")){
-            writeHello(userKey, messageKey, message)
+        if(isGreeting){
+            writeGreeting(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        if(message.lowercase().trim().startsWith("good")){
+        if(isGood){
             writeGood(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        if(message.lowercase().trim().startsWith("thank")){
+        if(isGratitude){
             writeWelcome(userKey, messageKey, message)
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeEtiquette
 
-    //START of FUNCTION: writeHello
-    private fun writeHello(userKey: String, messageKey: String, message: String){
+    //START of FUNCTION: writeGreeting
+    private fun writeGreeting(userKey: String, messageKey: String, message: String){
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val current = LocalDateTime.now()
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
+        val cleaned = message.lowercase().trim()
+        val words = cleaned.split(Regex("\\s+"))
+
+        val greetingWords = setOf("hello", "hi", "hey", "greetings")
+        val groupWords = setOf("everyone", "all", "guys", "friends", "team")
+
         //START of IF-STATEMENT:
-        if(message.lowercase().trim() == "hello" || message.lowercase().trim().startsWith("hello index") || message.lowercase().trim().startsWith("hello everyone")){
-            userReference.get().addOnSuccessListener{ snapshot ->
-                val user = snapshot.getValue(User::class.java)
+        if (words.isNotEmpty() && words[0] in greetingWords){
+            val directedToIndex = cleaned.contains("index")
+            val directedToGroup = words.any { it in groupWords }
+            val singleWordGreeting = words.size == 1
 
-                messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
-                    //START of FUNCTION: onDataChange
-                    override fun onDataChange(snapshot: DataSnapshot){
-                        var index = 1
-                        var key = "message$index"
+            //START of IF-STATEMENT:
+            if(directedToIndex || directedToGroup || singleWordGreeting){
+                userReference.get().addOnSuccessListener { snapshot ->
+                    val user = snapshot.getValue(User::class.java)
 
-                        //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
-                            index++
-                            key = "message$index"
-                        }//END of WHILE-LOOP
+                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                        //START of FUNCTION: onDataChange
+                        override fun onDataChange(snapshot: DataSnapshot){
+                            var index = 1
+                            var key = "message$index"
 
-                        messageReference.child(key).setValue(Message(aiKey, date, time, "Hello ${user?.username}"))
-                    }//END of FUNCTION: onDataChange
+                            //START of WHILE-LOOP:
+                            while (snapshot.hasChild(key)){
+                                index++
+                                key = "message$index"
+                            }//END of WHILE-LOOP
 
-                    //START of FUNCTION: onCancelled
-                    override fun onCancelled(error: DatabaseError){
-                    }//END of FUNCTION: onCancelled
-                })
-            }
+                            val response = "Hello ${user?.username}"
+
+                            messageReference.child(key).setValue(
+                                Message(aiKey, date, time, response)
+                            )
+                        }//END of FUNCTION: onDataChange
+
+                        //START of FUNCTION: onCancelled
+                        override fun onCancelled(error: DatabaseError) {}
+                        //END of FUNCTION: onCancelled
+                    })
+                }
+            }//END of IF-STATEMENT
         }//END of IF-STATEMENT
-    }//END of FUNCTION: writeHello
+    }//END of FUNCTION: writeGreeting
 
     //START of FUNCTION: writeGood
     private fun writeGood(userKey: String, messageKey: String, message: String){
@@ -77,112 +105,64 @@ class Etiquette{
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
-        //START of IF-STATEMENT:
-        if(message.lowercase().trim() == "good morning" || message.lowercase().trim().startsWith("good morning index")){
-            userReference.get().addOnSuccessListener{ snapshot ->
-                val user = snapshot.getValue(User::class.java)
+        val cleaned = message.lowercase().trim()
+        val words = cleaned.split(Regex("\\s+"))
 
-                messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
-                    //START of FUNCTION: onDataChange
-                    override fun onDataChange(snapshot: DataSnapshot){
-                        var index = 1
-                        var key = "message$index"
+        val goodGreetings = mapOf(
+            "morning" to "Good morning",
+            "afternoon" to "Good afternoon",
+            "evening" to "Good evening",
+            "night" to "Good night"
+        )
 
-                        //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
-                            index++
-                            key = "message$index"
-                        }//END of WHILE-LOOP
-
-                        messageReference.child(key).setValue(Message(aiKey, date, time, "Good morning ${user?.username}"))
-                    }//END of FUNCTION: onDataChange
-
-                    //START of FUNCTION: onCancelled
-                    override fun onCancelled(error: DatabaseError){
-                    }//END of FUNCTION: onCancelled
-                })
-            }
-        }//END of IF-STATEMENT
+        val groupWords = setOf("everyone", "all", "guys", "friends", "team")
 
         //START of IF-STATEMENT:
-        if(message.lowercase().trim() == "good afternoon" || message.lowercase().trim().startsWith("good afternoon index")){
-            userReference.get().addOnSuccessListener{ snapshot ->
-                val user = snapshot.getValue(User::class.java)
+        if(words.isNotEmpty() && (
+                    (words[0] == "good" && words.size >= 2 && words[1] in goodGreetings.keys) ||
+                            (words[0] in goodGreetings.keys)
+                    )
+        ){
+            val keyWord = if (words[0] == "good") words[1] else words[0]
+            val baseGreeting = goodGreetings[keyWord] ?: "Good day"
 
-                messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
-                    //START of FUNCTION: onDataChange
-                    override fun onDataChange(snapshot: DataSnapshot){
-                        var index = 1
-                        var key = "message$index"
+            val directedToIndex = cleaned.contains("index")
+            val directedToGroup = words.any { it in groupWords }
+            val singleGreeting = words.size <= 2
 
-                        //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
-                            index++
-                            key = "message$index"
-                        }//END of WHILE-LOOP
+            //START of IF-STATEMENT:
+            if(directedToIndex || directedToGroup || singleGreeting){
+                userReference.get().addOnSuccessListener { snapshot ->
+                    val user = snapshot.getValue(User::class.java)
 
-                        messageReference.child(key).setValue(Message(aiKey, date, time, "Good afternoon ${user?.username}"))
-                    }//END of FUNCTION: onDataChange
+                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                        //START of FUNCTION: onDataChange
+                        override fun onDataChange(snapshot: DataSnapshot){
+                            var index = 1
+                            var key = "message$index"
 
-                    //START of FUNCTION: onCancelled
-                    override fun onCancelled(error: DatabaseError){
-                    }//END of FUNCTION: onCancelled
-                })
-            }
-        }//END of IF-STATEMENT
+                            //START of WHILE-LOOP:
+                            while(snapshot.hasChild(key)){
+                                index++
+                                key = "message$index"
+                            }//END of WHILE-LOOP
 
-        //START of IF-STATEMENT:
-        if(message.lowercase().trim() == "good evening" || message.lowercase().trim().startsWith("good evening index")){
-            userReference.get().addOnSuccessListener{ snapshot ->
-                val user = snapshot.getValue(User::class.java)
+                            val response = when {
+                                keyWord == "night" -> "$baseGreeting ${user?.username}, sweet dreams"
+                                else -> "$baseGreeting ${user?.username}..."
+                            }
 
-                messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
-                    //START of FUNCTION: onDataChange
-                    override fun onDataChange(snapshot: DataSnapshot){
-                        var index = 1
-                        var key = "message$index"
+                            messageReference.child(key).setValue(
+                                Message(aiKey, date, time, response)
+                            )
+                        }//END of FUNCTION: onDataChange
 
-                        //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
-                            index++
-                            key = "message$index"
-                        }//END of WHILE-LOOP
-
-                        messageReference.child(key).setValue(Message(aiKey, date, time, "Good evening ${user?.username}"))
-                    }//END of FUNCTION: onDataChange
-
-                    //START of FUNCTION: onCancelled
-                    override fun onCancelled(error: DatabaseError){
-                    }//END of FUNCTION: onCancelled
-                })
-            }
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(message.lowercase().trim() == "good night" || message.lowercase().trim().startsWith("good night index")){
-            userReference.get().addOnSuccessListener{ snapshot ->
-                val user = snapshot.getValue(User::class.java)
-
-                messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
-                    //START of FUNCTION: onDataChange
-                    override fun onDataChange(snapshot: DataSnapshot){
-                        var index = 1
-                        var key = "message$index"
-
-                        //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
-                            index++
-                            key = "message$index"
-                        }//END of WHILE-LOOP
-
-                        messageReference.child(key).setValue(Message(aiKey, date, time, "Good night ${user?.username}, sweet dreams"))
-                    }//END of FUNCTION: onDataChange
-
-                    //START of FUNCTION: onCancelled
-                    override fun onCancelled(error: DatabaseError){
-                    }//END of FUNCTION: onCancelled
-                })
-            }
+                        //START of FUNCTION: onCancelled
+                        override fun onCancelled(error: DatabaseError) {}
+                        //END of FUNCTION: onCancelled
+                    })
+                }
+            }//END of IF-STATEMENT
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeGood
 
@@ -194,31 +174,46 @@ class Etiquette{
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
+        val cleaned = message.lowercase().trim()
+        val words = cleaned.split(Regex("\\s+"))
+
+        val thankWords = setOf("thank", "thanks")
+        val groupWords = setOf("everyone", "all", "guys", "friends", "team")
+
         //START of IF-STATEMENT:
-        if(message.lowercase().trim() == "thank you" || message.lowercase().trim() == "thanks" || message.lowercase().trim().startsWith("thanks index") || message.lowercase().trim().startsWith("thank you index")){
-            userReference.get().addOnSuccessListener{ snapshot ->
-                val user = snapshot.getValue(User::class.java)
+        if(words.isNotEmpty() && thankWords.any { words[0].startsWith(it) }){
+            val directedToIndex = cleaned.contains("index")
+            val directedToGroup = words.any { it in groupWords }
+            val singleWordThanks = words.size == 1 || (words.size == 2 && words[0] in thankWords)
 
-                messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
-                    //START of FUNCTION: onDataChange
-                    override fun onDataChange(snapshot: DataSnapshot){
-                        var index = 1
-                        var key = "message$index"
+            //START of IF-STATEMENT:
+            if(directedToIndex || directedToGroup || singleWordThanks){
+                userReference.get().addOnSuccessListener { snapshot ->
+                    val user = snapshot.getValue(User::class.java)
 
-                        //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
-                            index++
-                            key = "message$index"
-                        }//END of WHILE-LOOP
+                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                        //START of FUNCTION: onDataChange
+                        override fun onDataChange(snapshot: DataSnapshot){
+                            var index = 1
+                            var key = "message$index"
 
-                        messageReference.child(key).setValue(Message(aiKey, date, time, "I am glad to be of assistance ${user?.username}"))
-                    }//END of FUNCTION: onDataChange
+                            //START of WHILE-LOOP:
+                            while(snapshot.hasChild(key)){
+                                index++
+                                key = "message$index"
+                            }//END of WHILE-LOOP
 
-                    //START of FUNCTION: onCancelled
-                    override fun onCancelled(error: DatabaseError){
-                    }//END of FUNCTION: onCancelled
-                })
-            }
+                            val response = "You're welcome ${user?.username}..."
+
+                            messageReference.child(key).setValue(Message(aiKey, date, time, response))
+                        }//END of FUNCTION: onDataChange
+
+                        //START of FUNCTION: onCancelled
+                        override fun onCancelled(error: DatabaseError) {}
+                        //END of FUNCTION: onCancelled
+                    })
+                }
+            }//END of IF-STATEMENT
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeWelcome
 }//END of CLASS: Etiquette
