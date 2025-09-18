@@ -23,10 +23,12 @@ class Etiquette{
         val greetingWords = setOf("hello", "hi", "hey", "greetings")
         val goodWords = setOf("good", "morning", "afternoon", "evening", "night")
         val gratitudeWords = setOf("thank", "thanks")
+        val farewellWords = setOf("bye", "goodbye", "later", "see", "take", "farewell")
 
         val isGreeting = words.any { it in greetingWords }
         val isGood = words.any { it in goodWords }
         val isGratitude = words.any { it in gratitudeWords }
+        val isFarewell = words.any{ it in farewellWords }
 
         //START of IF-STATEMENT:
         if(isGreeting){
@@ -41,6 +43,11 @@ class Etiquette{
         //START of IF-STATEMENT:
         if(isGratitude){
             writeWelcome(userKey, messageKey, message)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(isFarewell){
+            writeFarewell(userKey, messageKey, message)
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeEtiquette
 
@@ -224,4 +231,55 @@ class Etiquette{
             }//END of IF-STATEMENT
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeWelcome
+
+    //START of FUNCTION: writeFarewell
+    private fun writeFarewell(userKey: String, messageKey: String, message: String){
+        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        val cleaned = message.lowercase().trim()
+        val words = cleaned.split(Regex("\\s+"))
+
+        val farewellWords = setOf("bye", "goodbye", "later", "see", "take", "farewell")
+        val groupWords = setOf("everyone", "all", "guys", "friends", "team")
+
+        //START of IF-STATEMENT:
+        if(words.isNotEmpty() && words.any { it in farewellWords }){
+            val directedToPinky = cleaned.contains("pinky")
+            val directedToGroup = words.any { it in groupWords }
+            val singleFarewell = words.size <= 3
+
+            //START of IF-STATEMENT:
+            if(directedToPinky || directedToGroup || singleFarewell){
+                userReference.get().addOnSuccessListener { snapshot ->
+                    val user = snapshot.getValue(User::class.java)
+
+                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                        //START of FUNCTION: onDataChange
+                        override fun onDataChange(snapshot: DataSnapshot){
+                            var index = 1
+                            var key = "message$index"
+
+                            //START of WHILE-LOOP:
+                            while(snapshot.hasChild(key)){
+                                index++
+                                key = "message$index"
+                            }//END of WHILE-LOOP
+
+                            val response = "Bye bye ${user?.username}..."
+
+                            messageReference.child(key).setValue(Message(aiKey, date, time, response))
+                        }//END of FUNCTION: onDataChange
+
+                        //START of FUNCTION: onCancelled
+                        override fun onCancelled(error: DatabaseError){
+                        }//END of FUNCTION: onCancelled
+                    })
+                }
+            }//END of IF-STATEMENT
+        }//END of IF-STATEMENT
+    }//END of FUNCTION: writeFarewell
 }//END of CLASS: Etiquette
