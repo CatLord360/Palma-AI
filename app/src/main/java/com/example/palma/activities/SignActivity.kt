@@ -99,7 +99,7 @@ class SignActivity : AppCompatActivity() {
                         val user = User(username, gender, birthdate, mobile, email)
 
                         reference.child(userKey).child("Personal Information").setValue(user)
-                        reference.child(userKey).child("Personal Information/Password").setValue(password).addOnCompleteListener{writeAI(userKey, username)}
+                        reference.child(userKey).child("Personal Information/Password/password").setValue(password).addOnCompleteListener{writeAI(userKey, username)}
                     }
                 }//END of IF-STATEMENT
 
