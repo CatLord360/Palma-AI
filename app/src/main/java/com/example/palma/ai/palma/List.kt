@@ -75,7 +75,7 @@ class List{
                 "#reminder set daily [HH:mm] [reminder]",
                 "#reminder set weekly [day] [HH:mm] [reminder]",
                 "#reminder set monthly [dd] [HH:mm] [reminder]",
-                "reminder set annually [MM-dd] [HH:mm] [reminder]",
+                "#reminder set annually [MM-dd] [HH:mm] [reminder]",
                 "#reminder delete daily [HH:mm] [reminder]",
                 "#reminder delete weekly [day] [HH:mm] [reminder]",
                 "#reminder delete monthly [dd] [HH:mm] [reminder]",
