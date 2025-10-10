@@ -41,20 +41,6 @@ class List{
                 "Don't think of using any of these ${user?.username}",
                 "#list command",
                 "#list contact",
-                "#compute sum of [number] [number]...",
-                "#compute difference of [number] [number]...",
-                "#compute product of [number] [number]...",
-                "#compute quotient of [number] [divisor]",
-                "#compute modulus of [number] [divisor]",
-                "#compute average of [number] [number]...",
-                "#compute square of [number]",
-                "#compute cube of [number]",
-                "#compute factorial of [number]",
-                "#compute gcd of [number] [number]",
-                "#compute lcm of [number] [number]",
-                "#compute percentage of [whole] [part]",
-                "#compute absolute of [number]",
-                "#compute round of [number]",
                 "Commanding me is evidence of how fucking useless you are ${user?.username}"
             )
 
