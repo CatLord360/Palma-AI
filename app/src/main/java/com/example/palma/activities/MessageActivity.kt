@@ -2,15 +2,16 @@ package com.example.palma.activities
 
 import android.content.Intent
 import android.os.Bundle
-import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.palma.R
 import com.example.palma.adapters.ContactAdapter
 import com.example.palma.adapters.MessageAdapter
 import com.example.palma.ai.AI
 import com.example.palma.ai.palma.Greeting
+import com.example.palma.ai.palma.Reminder
 import com.example.palma.databinding.ActivityMessageBinding
 import com.example.palma.models.Contact
 import com.example.palma.models.Message
@@ -25,7 +26,11 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
+import java.util.Locale
 import kotlinx.coroutines.tasks.await
+import java.time.Duration
+import java.time.LocalTime
 
 //START of CLASS: MessageActivity
 class MessageActivity : AppCompatActivity() {
@@ -37,7 +42,7 @@ class MessageActivity : AppCompatActivity() {
     private val database = Firebase.database
 
     //START of FUNCTION: onCreate
-    override fun onCreate(savedInstanceState: Bundle?) {
+    override fun onCreate(savedInstanceState: Bundle?){
         super.onCreate(savedInstanceState)
         binding = ActivityMessageBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -52,17 +57,33 @@ class MessageActivity : AppCompatActivity() {
             loadMessage(userKey, contactKey)
             writeGreeting(userKey, contactKey)
 
-            binding.ImageContact.setOnClickListener{
+            lifecycleScope.launch{
+                //START of WHILE-LOOP:
+                while(true){
+                    //START of TRY-STATEMENT:
+                    try{
+                        findReminder(userKey, contactKey)
+                    }//END of TRY-STATEMENT
+
+                    //START of CATCH-STATEMENT:
+                    catch(e: Exception){
+                    }//END of CATCH-STATEMENT
+
+                    delay(60000)
+                }
+            }
+
+            binding.ImageContact.setOnClickListener {
                 val intent = Intent(this@MessageActivity, ContactActivity::class.java)
                 intent.putExtra("userKey", userKey)
                 intent.putExtra("contactKey", contactKey)
                 startActivity(intent)
             }
 
-            binding.ButtSend.setOnClickListener{
+            binding.ButtSend.setOnClickListener {
                 writeMessage(userKey, contactKey)
             }
-        }//END of IF-STATEMENT
+        }
     }//END of FUNCTION: onCreate
 
     //START of FUNCTION: setupRecyclerView
@@ -215,7 +236,7 @@ class MessageActivity : AppCompatActivity() {
     }//END of FUNCTION: loadAI
 
     //START of FUNCTION: writeGreeting
-    private fun writeGreeting(userKey: String, contactKey: String) {
+    private fun writeGreeting(userKey: String, contactKey: String){
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val contactReference = database.getReference("Palma/User/$userKey/Contact/$contactKey")
         val current = LocalDateTime.now()
@@ -223,7 +244,7 @@ class MessageActivity : AppCompatActivity() {
         val day = current.format(DateTimeFormatter.ofPattern("dd"))
         val today = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
 
-        userReference.get().addOnSuccessListener { userSnapshot ->
+        userReference.get().addOnSuccessListener{ userSnapshot ->
             val birthdate = userSnapshot.child("birthdate").getValue(String::class.java).toString()
             val list = birthdate.lowercase().trim().split("-")
 
@@ -295,21 +316,161 @@ class MessageActivity : AppCompatActivity() {
 
                                     //START of CATCH-STATEMENT:
                                     catch(e: Exception){
-                                        Log.e("writeMessage", "Error handling group AI: ${e.message}")
                                     }//END of CATCH-STATEMENT
                                 }
                             }//END of IF-STATEMENT
                         }//END of IF-STATEMENT
-
-                        //START of ELSE-STATEMENT:
-                        else {
-                            Log.d("writeGreeting", "Already greeted today, skipping.")
-                        }//END of ELSE-STATEMENT
                     }
                 }
             }//END of IF-STATEMENT
         }
     }//END of FUNCTION: writeGreeting
+
+    //START of FUNCTION: findReminder
+    private suspend fun findReminder(userKey: String, contactKey: String){
+        val contactReference = database.getReference("Palma/User/$userKey/Contact/$contactKey")
+        val current = LocalDateTime.now()
+        val currentTime = LocalTime.now()
+        val contactSnapshot = contactReference.get().await()
+        val messageKey = contactSnapshot.child("messageKey").getValue(String::class.java) ?: return
+        val reminderReference = database.getReference("Palma/Message/$messageKey/Reminder")
+        val reminderSnapshot = reminderReference.get().await()
+        if (!reminderSnapshot.exists() || !reminderSnapshot.hasChildren()) return
+
+        //START of FOR-LOOP:
+        for(reminder in reminderSnapshot.children){
+            val foundType = reminder.child("type").getValue(String::class.java) ?: continue
+            val foundTime = reminder.child("time").getValue(String::class.java)?.substring(0, 5)?.trim() ?: continue
+            val formatter = DateTimeFormatter.ofPattern("HH:mm")
+            val target = try {
+                LocalTime.parse(foundTime, formatter)
+            } catch (e: Exception) {
+                continue
+            }
+
+            val withinTarget = Duration.between(target, currentTime).abs().toMinutes() <= 1
+
+            //START of IF-STATEMENT:
+            if(foundType == "daily"){
+                //START of IF-STATEMENT:
+                if(withinTarget){
+                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                }//END of IF-STATEMENT
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if(foundType == "weekly"){
+                val foundDay = reminder.child("day").getValue(String::class.java)?.lowercase() ?: continue
+                val currentDay = current.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH).lowercase()
+
+                //START of IF-STATEMENT:
+                if(currentDay == foundDay && withinTarget){
+                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                }//END of IF-STATEMENT
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if(foundType == "monthly"){
+                val foundDate = reminder.child("date").getValue(String::class.java)?.padStart(2, '0') ?: continue
+                val currentDate = current.format(DateTimeFormatter.ofPattern("dd"))
+
+                //START of IF-STATEMENT:
+                if(currentDate == foundDate && withinTarget){
+                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                }//END of IF-STATEMENT
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if(foundType == "annually"){
+                val foundDate = reminder.child("date").getValue(String::class.java) ?: continue
+                val currentDate = current.format(DateTimeFormatter.ofPattern("MM-dd"))
+
+                //START of IF-STATEMENT:
+                if(currentDate == foundDate && withinTarget){
+                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                }//END of IF-STATEMENT
+            }//END of IF-STATEMENT
+        }//END of FOR-LOOP
+    }//END of FUNCTION: findReminder
+
+    //START of FUNCTION: writeReminder
+    private fun writeReminder(userKey: String, contactKey: String, reminderKey: String, messageKey: String){
+        val contactReference = database.getReference("Palma/User/$userKey/Contact/$contactKey")
+        val reminderReference = database.getReference("Palma/Message/$messageKey/Reminder/$reminderKey")
+
+        contactReference.get().addOnSuccessListener { contactSnapshot ->
+            reminderReference.get().addOnSuccessListener { reminderSnapshot ->
+                val reminder = reminderSnapshot.child("reminder").getValue(String::class.java) ?: return@addOnSuccessListener
+                val contactType = contactSnapshot.child("type").getValue(String::class.java)
+
+                //START of IF-STATEMENT:
+                if(contactType == "ai" || contactType == "group"){
+                    //START of IF-STATEMENT:
+                    if(contactType == "ai"){
+                        val foundUsername = contactSnapshot.child("username").getValue(String::class.java)
+
+                        //START of IF-STATEMENT:
+                        if(foundUsername == "Palma"){
+                            Reminder().alert(userKey, messageKey, reminder)
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(foundUsername == "Tom"){
+                            com.example.palma.ai.tom.Reminder().alert(userKey, messageKey, reminder)
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(foundUsername == "Rin"){
+                            com.example.palma.ai.rin.Reminder().alert(userKey, messageKey, reminder)
+                        }//END of IF-STATEMENT
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT
+                    if(contactType == "group"){
+                        val aiList = mutableListOf<String>()
+
+                        //START of FOR-LOOP:
+                        for(member in contactSnapshot.child("Member").children){
+                            val foundUsername = member.child("username").getValue(String::class.java)
+                            val foundType = member.child("type").getValue(String::class.java)
+
+                            //START of IF-STATEMENT:
+                            if(foundType == "ai" && (foundUsername == "Palma" || foundUsername == "Tom" || foundUsername == "Rin")){
+                                aiList.add(foundUsername!!)
+                            }//END of IF-STATEMENT
+                        }//END of FOR-LOOP
+
+                        //START of IF-STATEMENT:
+                        if(aiList.isNotEmpty()){
+                            lifecycleScope.launch{
+
+                                //START of FOR-LOOP:
+                                for(ai in aiList){
+
+                                    //START of IF-STATEMENT:
+                                    if(ai == "Palma"){
+                                        Reminder().alert(userKey, messageKey, reminder)
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(ai == "Tom"){
+                                        com.example.palma.ai.tom.Reminder().alert(userKey, messageKey, reminder)
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(ai == "Rin"){
+                                        com.example.palma.ai.rin.Reminder().alert(userKey, messageKey, reminder)
+                                    }//END of IF-STATEMENT
+
+                                    delay(2000)
+                                }//END of FOR-LOOP
+                            }
+                        }//END of IF-STATEMENT
+                    }//END of IF-STATEMENT
+                }//END of IF-STATEMENT
+            }
+        }
+    }//END of FUNCTION: writeReminder
 
     //START of FUNCTION: writeMessage
     private fun writeMessage(userKey: String, contactKey: String){
@@ -358,8 +519,7 @@ class MessageActivity : AppCompatActivity() {
                                         AI().writeAI(userKey, messageKey, member.child("username").getValue(String::class.java).toString(), message)
                                     }//END of IF-STATEMENT
                                 }//END of FOR-LOOP
-                            } catch (e: Exception) {
-                                Log.e("writeMessage", "Error handling group AI: ${e.message}")
+                            } catch (e: Exception){
                             }
                         }
                     }//END of IF-STATEMENT
