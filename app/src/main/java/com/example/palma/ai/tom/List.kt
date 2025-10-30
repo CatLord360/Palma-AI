@@ -32,6 +32,11 @@ class List{
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
+        if(list[1] == "reminder"){
+            writeReminder(userKey, messageKey)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
         if(list[1] == "load"){
             loadList(userKey, messageKey, message)
         }//END of IF-STATEMENT
@@ -62,12 +67,17 @@ class List{
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
 
-        userReference.get().addOnSuccessListener{ snapshot ->
-            val user = snapshot.getValue(User::class.java)
+        userReference.get().addOnSuccessListener{ userSnapshot ->
             val list = arrayOf(
                 "List of Command/s:",
                 "#list command",
                 "#list contact",
+                "#list reminder",
+                "#list new [name] [type]",
+                "#list load [name]",
+                "#list delete [name]",
+                "#list add [name] [item]",
+                "#list remove [name] [item]",
                 "#reminder set daily [HH:mm] [reminder]",
                 "#reminder set weekly [day] [HH:mm] [reminder]",
                 "#reminder set monthly [dd] [HH:mm] [reminder]",
@@ -85,8 +95,7 @@ class List{
                 "#contact add ai [ai]",
                 "#contact add user [email]",
                 "#contact remove ai [ai]",
-                "#contact remove user [user]",
-                "How may I be of service ${user?.username}?"
+                "#contact remove user [user]"
             )
 
             messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
@@ -106,12 +115,14 @@ class List{
                         val current = LocalDateTime.now()
                         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                        key = "message$index"
+                        val key = "message$index"
 
                         messageReference.child(key).setValue(Message(aiKey, date, time, list[i]))
 
                         index++
                     }//END of FOR-LOOP
+
+                    success(userKey, messageKey, "command", "command", "")
                 }//END of FUNCTION: onDataChange
 
                 //START of FUNCTION: onCancelled
@@ -159,7 +170,6 @@ class List{
 
                         //START of FOR-LOOP:
                         for(contactInfo in contactList){
-                            key = "message$index"
                             val current = LocalDateTime.now()
                             val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                             val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
@@ -168,6 +178,8 @@ class List{
                             messageReference.child(key).setValue(message)
                             index++
                         }//END of FOR-LOOP
+
+                        success(userKey, messageKey, "contact", "contact", "")
                     }
                 }//END of FUNCTION: onDataChange
 
@@ -179,6 +191,79 @@ class List{
         }
     }//END of FUNCTION: writeContact
 
+    //START of FUNCTION: writeReminder
+    private fun writeReminder(userKey: String, messageKey: String){
+        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val reminderReference = messageReference.child("Reminder")
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    //START of IF-STATEMENT:
+                    if(snapshot.hasChild("Reminder")){
+                        var index = 1
+                        var key = "message$index"
+
+                        //START of WHILE-LOOP:
+                        while(snapshot.hasChild(key)){
+                            index = index + 1
+                            key = "message$index"
+                        }//END of WHILE-LOOP
+
+                        reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
+                            //START of FOR-LOOP:
+                            for(reminder in reminderSnapshot.children){
+                                val current = LocalDateTime.now()
+                                val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+                                messageReference.child("message$index").setValue(Message(aiKey, date, time, "${reminder.child("type").getValue(String::class.java)} reminder for ${reminder.child("reminder").getValue(String::class.java)}"))
+                                index = index + 1
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "daily"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: everyday"))
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "weekly"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: every ${reminder.child("day").getValue(String::class.java)}"))
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "monthly"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: ${reminder.child("date").getValue(String::class.java)} of the month"))
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "annually"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: ${reminder.child("date").getValue(String::class.java)} of the year"))
+                                }//END of IF-STATEMENT
+                                index = index + 1
+
+                                messageReference.child("message$index").setValue(Message(aiKey, date, time, "time: ${reminder.child("time").getValue(String::class.java)}"))
+                                index = index + 1
+                            }//END of FOR-LOOP
+
+                            success(userKey, messageKey, "reminder", "reminder", "")
+                        }
+                    }//END of IF-STATEMENT
+
+                    //START of ELSE-STATEMENT:
+                    else{
+                        error(userKey, messageKey, "reminder")
+                    }//END of ELSE-STATEMENT
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: writeReminder
+
     //START of FUNCTION: loadList
     private fun loadList(userKey: String, messageKey: String, message: String){
         val contactReference = database.getReference("Palma/User/$userKey/Contact")
@@ -186,9 +271,6 @@ class List{
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val listReference = messageReference.child("List")
         val list = message.trim().split(" ")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
         contactReference.get().addOnSuccessListener{ snapshot ->
             //START of FOR-LOOP:
@@ -216,55 +298,72 @@ class List{
 
                             //START of IF-STATEMENT:
                             if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ snapshot ->
-                                    listReference.get().addOnSuccessListener{ listSnapshot ->
-                                        if (list.size < 3) return@addOnSuccessListener
-                                        val name = list[2]
-                                        var listKey: String? = null
-
-                                        //START of FOR-LOOP:
-                                        for(child in listSnapshot.children){
-                                            val listName = child.child("name").getValue(String::class.java)
-
-                                            //START of IF-STATEMENT
-                                            if(listName != null && listName == name){
-                                                listKey = child.key
-                                                break
-                                            }//END of IF-STATEMENT
-                                        }//END of FOR-LOOP
-
-                                        //START of IF-STATEMENT:
-                                        if(listKey != null){
-                                            messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                                //START of FUNCTION: onDataChange
-                                                override fun onDataChange(snapshot: DataSnapshot){
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                                        //START of FUNCTION: onDataChange
+                                        override fun onDataChange(snapshot: DataSnapshot){
+                                            //START of IF-STATEMENT:
+                                            if(snapshot.hasChild("List")){
+                                                listReference.get().addOnSuccessListener{ listSnapshot ->
+                                                    val name = list[2]
                                                     var index = 1
-                                                    var key = "message$index"
 
-                                                    //START of WHILE-LOOP:
-                                                    while(snapshot.hasChild(key)){
-                                                        index++
-                                                        key = "message$index"
-                                                    }//END of WHILE-LOOP
+                                                    //START of FOR-LOOP:
+                                                    for(child in listSnapshot.children){
+                                                        //START of IF-STATEMENT
+                                                        if(name == child.child("name").getValue(String::class.java)){
+                                                            var index = 1
+                                                            var key = "message$index"
 
-                                                    listReference.child("$listKey/Item").get().addOnSuccessListener{ itemSnapshot ->
-                                                        //START of FOR-LOOP
-                                                        for(child in itemSnapshot.children){
-                                                            val item = child.child("item").getValue(String::class.java)
-                                                            val key = "message$index"
-                                                            val message = Message(aiKey, date, time, item)
-                                                            messageReference.child(key).setValue(message)
-                                                            index++
-                                                        }//END of FOR-LOOP
-                                                    }
-                                                }//END of FUNCTION: onDataChange
+                                                            //START of WHILE-LOOP:
+                                                            while(snapshot.hasChild(key)){
+                                                                index = index + 1
+                                                                key = "message$index"
+                                                            }//END of WHILE-LOOP
 
-                                                //START of FUNCTION: onCancelled
-                                                override fun onCancelled(error: DatabaseError){
-                                                }//END of FUNCTION: onCancelled
-                                            })
-                                        }//END of IF-STATEMENT
-                                    }
+                                                            //START of IF-STATEMENT:
+                                                            if((child.child("type").getValue(String::class.java) == "public") || ((child.child("type").getValue(String::class.java) == "private") && (child.child("userKey").getValue(String::class.java) == userKey))){
+                                                                //START of FOR-LOOP:
+                                                                for(item in child.child("Item").children){
+                                                                    val current = LocalDateTime.now()
+                                                                    val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                                                    val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+                                                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, item.child("item").getValue(String::class.java)))
+                                                                    index = index + 1
+                                                                }//END of FOR-LOOP
+
+                                                                success(userKey, messageKey, "load", name, "")
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, messageKey, "userKey")
+                                                            }//END of ELSE-STATEMENT
+
+                                                            break
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of IF-STATEMENT:
+                                                        if((name != child.child("name").getValue(String::class.java)) && (index == listSnapshot.childrenCount.toInt())){
+                                                            error(userKey, messageKey, "list")
+                                                        }//END of IF-STATEMENT
+
+                                                        index = index + 1
+                                                    }//END of FOR-LOOP
+                                                }
+                                            }//END of IF-STATEMENT
+
+                                            //START of ELSE-STATEMENT:
+                                            else{
+                                                error(userKey, messageKey, "list")
+                                            }//END of ELSE-STATEMENT
+                                        }//END of FUNCTION: onDataChange
+
+                                        //START of FUNCTION: onCancelled
+                                        override fun onCancelled(error: DatabaseError){
+                                        }//END of FUNCTION: onCancelled
+                                    })
                                 }
                             }//END of IF-STATEMENT
                         }
@@ -280,9 +379,7 @@ class List{
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val listReference = messageReference.child("List")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        val list = message.trim().split(" ")
 
         contactReference.get().addOnSuccessListener{ snapshot ->
             //START of FOR-LOOP:
@@ -310,44 +407,73 @@ class List{
 
                             //START of IF-STATEMENT:
                             if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ snapshot ->
-                                    listReference.get().addOnSuccessListener{ listSnapshot ->
-                                        val list = message.trim().split(" ")
-                                        val name = list[2]
-                                        val type = list[3]
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                                        //START of FUNCTION: onDataChange
+                                        override fun onDataChange(snapshot: DataSnapshot){
+                                            val name = list[2]
+                                            val type = list[3]
 
-                                        var index = 1
-                                        var listKey = "List - $index"
+                                            //START of IF-STATEMENT:
+                                            if(snapshot.hasChild("List")){
+                                                listReference.get().addOnSuccessListener{ listSnapshot ->
+                                                    var index = 1
 
-                                        //START of WHILE-LOOP:
-                                        while(listSnapshot.hasChild(listKey)){
-                                            index++
-                                            listKey = "List - $index"
-                                        }//END of WHILE-LOOP
+                                                    //START of FOR-LOOP:
+                                                    for(child in listSnapshot.children){
+                                                        //START of IF-STATEMENT:
+                                                        if(name == child.child("name").getValue(String::class.java)){
+                                                            error(userKey, messageKey, "exist")
+                                                            break
+                                                        }//END of IF-STATEMENT
 
-                                        listReference.child(listKey).setValue(List(name, type, userKey))
+                                                        //START of IF-STATEMENT:
+                                                        if((name != child.child("name").getValue(String::class.java)) && (index == listSnapshot.childrenCount.toInt())){
+                                                            //START of IF-STATEMENT:
+                                                            if(((type == "public") || (type == "private")) && (type.isNotBlank())){
+                                                                index = 1
+                                                                var listKey = "List - $index"
 
-                                        messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                            //START of FUNCTION: onDataChange
-                                            override fun onDataChange(snapshot: DataSnapshot){
-                                                var index = 1
-                                                var key = "message$index"
+                                                                //START of WHILE-LOOP:
+                                                                while(listSnapshot.hasChild(listKey)){
+                                                                    index = index + 1
+                                                                    listKey = "List - $index"
+                                                                }//END of WHILE-LOOP
 
-                                                //START of WHILE-LOOP:
-                                                while(snapshot.hasChild(key)){
-                                                    index++
-                                                    key = "message$index"
-                                                }//END of WHILE-LOOP
+                                                                listReference.child(listKey).setValue(List(name, type, userKey))
+                                                                success(userKey, messageKey, "new", name, "")
+                                                            }//END of IF-STATEMENT
 
-                                                val message = Message(aiKey, date, time, "I have successfully made the list $name...")
-                                                messageReference.child(key).setValue(message)
-                                            }//END of FUNCTION: onDataChange
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, messageKey, "type")
+                                                            }//END of ELSE-STATEMENT
+                                                        }//END of IF-STATEMENT
 
-                                            //START of FUNCTION: onCancelled
-                                            override fun onCancelled(error: DatabaseError){
-                                            }//END of FUNCTION: onCancelled
-                                        })
-                                    }
+                                                        index = index + 1
+                                                    }
+                                                }
+                                            }//END of IF-STATEMENT
+
+                                            //START of ELSE-STATEMENT:
+                                            else{
+                                                //START of IF-STATEMENT:
+                                                if(((type == "public") || (type == "private")) && (type.isNotBlank())){
+                                                    listReference.child("List - 1").setValue(List(name, type, userKey))
+                                                    success(userKey, messageKey, "new", name, "")
+                                                }//END of IF-STATEMENT
+
+                                                //START of ELSE-STATEMENT:
+                                                else{
+                                                    error(userKey, messageKey, "type")
+                                                }//END of ELSE-STATEMENT
+                                            }//END of ELSE-STATEMENT
+                                        }//END of FUNCTION: onDataChange
+
+                                        //START of FUNCTION: onCancelled
+                                        override fun onCancelled(error: DatabaseError){
+                                        }//END of FUNCTION: onCancelled
+                                    })
                                 }
                             }//END of IF-STATEMENT
                         }
@@ -364,9 +490,6 @@ class List{
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val listReference = messageReference.child("List")
         val list = message.trim().split(" ")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
         contactReference.get().addOnSuccessListener{ snapshot ->
             //START of FOR-LOOP:
@@ -394,49 +517,53 @@ class List{
 
                             //START of IF-STATEMENT:
                             if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ snapshot ->
-                                    listReference.get().addOnSuccessListener{ listSnapshot ->
-                                        if (list.size < 3) return@addOnSuccessListener
-                                        val name = list[2]
-                                        var listKey: String? = null
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                                        //START of FUNCTION: onDataChange
+                                        override fun onDataChange(snapshot: DataSnapshot){
+                                            val name = list[2]
 
-                                        //START of FOR-LOOP:
-                                        for(child in listSnapshot.children){
-                                            val listName = child.child("name").getValue(String::class.java)
+                                            //START of IF-STATEMENT:
+                                            if(snapshot.hasChild("List")){
+                                                listReference.get().addOnSuccessListener{ listSnapshot ->
+                                                    var index = 1
 
-                                            //START of IF-STATEMENT
-                                            if(listName != null && listName == name){
-                                                listKey = child.key
-                                                break
+                                                    //START of FOR-LOOP:
+                                                    for(child in listSnapshot.children){
+                                                        //START of IF-STATEMENT:
+                                                        if(name == child.child("name").getValue(String::class.java)){
+                                                            //START of IF-STATEMENT:
+                                                            if((child.child("type").getValue(String::class.java) == "public") || ((child.child("type").getValue(String::class.java) == "private") && (child.child("userKey").getValue(String::class.java) == userKey))){
+                                                                listReference.child(child.key.toString()).removeValue()
+                                                                success(userKey, messageKey, "delete", name, "")
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, messageKey, "userKey")
+                                                            }//END of ELSE-STATEMENT
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of IF-STATEMENT:
+                                                        if((name != child.child("name").getValue(String::class.java)) && (index == listSnapshot.childrenCount.toInt())){
+                                                            error(userKey, messageKey, "list")
+                                                        }//END of IF-STATEMENT
+
+                                                        index = index + 1
+                                                    }//END of FOR-LOOP
+                                                }
                                             }//END of IF-STATEMENT
-                                        }//END of FOR-LOOP
 
-                                        //START of IF-STATEMENT:
-                                        if(listKey != null){
-                                            listReference.child(listKey).removeValue()
-                                        }//END of IF-STATEMENT
+                                            //START of ELSE-STATEMENT:
+                                            else{
+                                                error(userKey, messageKey, "list")
+                                            }//END of ELSE-STATEMENT
+                                        }//END of FUNCTION: onDataChange
 
-                                        messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                            //START of FUNCTION: onDataChange
-                                            override fun onDataChange(snapshot: DataSnapshot){
-                                                var index = 1
-                                                var key = "message$index"
-
-                                                //START of WHILE-LOOP:
-                                                while(snapshot.hasChild(key)){
-                                                    index++
-                                                    key = "message$index"
-                                                }//END of WHILE-LOOP
-
-                                                val message = Message(aiKey, date, time, "I have successfully deleted the list $name...")
-                                                messageReference.child(key).setValue(message)
-                                            }//END of FUNCTION: onDataChange
-
-                                            //START of FUNCTION: onCancelled
-                                            override fun onCancelled(error: DatabaseError){
-                                            }//END of FUNCTION: onCancelled
-                                        })
-                                    }
+                                        //START of FUNCTION: onCancelled
+                                        override fun onCancelled(error: DatabaseError){
+                                        }//END of FUNCTION: onCancelled
+                                    })
                                 }
                             }//END of IF-STATEMENT
                         }
@@ -452,9 +579,7 @@ class List{
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val listReference = messageReference.child("List")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        val list = message.trim().split(" ")
 
         contactReference.get().addOnSuccessListener{ snapshot ->
             //START of FOR-LOOP:
@@ -482,62 +607,67 @@ class List{
 
                             //START of IF-STATEMENT:
                             if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ snapshot ->
-                                    listReference.get().addOnSuccessListener{ listSnapshot ->
-                                        val list = message.trim().split(" ")
-                                        if (list.size < 4) return@addOnSuccessListener
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                                        //START of FUNCTION: onDataChange
+                                        override fun onDataChange(snapshot: DataSnapshot){
+                                            val name = list[2]
 
-                                        val name = list[2]
-                                        val item = list.subList(3, list.size).joinToString(" ")
+                                            //START of IF-STATEMENT:
+                                            if(snapshot.hasChild("List")){
+                                                listReference.get().addOnSuccessListener{ listSnapshot ->
+                                                    var index = 1
 
-                                        var index = 1
-                                        var listKey: String? = null
+                                                    //START of FOR-LOOP:
+                                                    for(child in listSnapshot.children){
+                                                        //START of IF-STATEMENT:
+                                                        if(name == child.child("name").getValue(String::class.java)){
+                                                            val type = child.child("type").getValue(String::class.java)
+                                                            val item = list.subList(3, list.size).joinToString(" ")
 
-                                        //START of FOR-LOOP:
-                                        for(child in listSnapshot.children) {
-                                            val listName = child.child("name").getValue(String::class.java)
+                                                            //START of IF-STATEMENT:
+                                                            if((type == "public") || (type == "private") && (child.child("userKey").getValue(String::class.java) == userKey)){
+                                                                index = 1
+                                                                var itemKey = "Item - $index"
 
-                                            //START of IF-STATEMENT
-                                            if(listName != null && listName == name){
-                                                listKey = child.key
-                                                break
+                                                                //START of WHILE-LOOP:
+                                                                while(child.child("Item").hasChild(itemKey)){
+                                                                    index = index + 1
+                                                                    itemKey = "Item - $index"
+                                                                }//END of WHILE-LOOP
+
+                                                                listReference.child("${child.key}/Item/$itemKey").setValue(Item(item, userKey))
+                                                                success(userKey, messageKey, "add", name, item)
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, messageKey, "userKey")
+                                                            }//END of ELSE-STATEMENT
+
+                                                            break
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of IF-STATEMENT:
+                                                        if((name != child.child("name").getValue(String::class.java)) && (index == listSnapshot.childrenCount.toInt())){
+                                                            error(userKey, messageKey, "list")
+                                                        }//END of IF-STATEMENT
+
+                                                        index = index + 1
+                                                    }//END lof FOR-LOOP
+                                                }
                                             }//END of IF-STATEMENT
-                                        }//END of FOR-LOOP
 
-                                        listReference.child("$listKey/Item").get().addOnSuccessListener{ itemSnapshot ->
-                                            index = 1
-                                            var itemKey = "Item - $index"
+                                            //START of ELSE-STATEMENT:
+                                            else{
+                                                error(userKey, messageKey, "list")
+                                            }//END of ELSE-STATEMENT
+                                        }//END of FUNCTION: onDataChange
 
-                                            //START of WHILE-LOOP
-                                            while(itemSnapshot.hasChild(itemKey)){
-                                                index++
-                                                itemKey = "Item - $index"
-                                            }//END of WHILE-LOOP
-
-                                            listReference.child("$listKey/Item/$itemKey").setValue(Item(item, userKey))
-                                        }
-
-                                        messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                            //START of FUNCTION: onDataChange
-                                            override fun onDataChange(snapshot: DataSnapshot){
-                                                var index = 1
-                                                var key = "message$index"
-
-                                                //START of WHILE-LOOP:
-                                                while(snapshot.hasChild(key)){
-                                                    index++
-                                                    key = "message$index"
-                                                }//END of WHILE-LOOP
-
-                                                val message = Message(aiKey, date, time, "I have successfully added $item to the list $name...")
-                                                messageReference.child(key).setValue(message)
-                                            }//END of FUNCTION: onDataChange
-
-                                            //START of FUNCTION: onCancelled
-                                            override fun onCancelled(error: DatabaseError){
-                                            }//END of FUNCTION: onCancelled
-                                        })
-                                    }
+                                        //START of FUNCTION: onCancelled
+                                        override fun onCancelled(error: DatabaseError){
+                                        }//END of FUNCTION: onCancelled
+                                    })
                                 }
                             }//END of IF-STATEMENT
                         }
@@ -553,9 +683,7 @@ class List{
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val listReference = messageReference.child("List")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        val list = message.trim().split(" ")
 
         contactReference.get().addOnSuccessListener { snapshot ->
             //START of FOR-LOOP:
@@ -583,67 +711,75 @@ class List{
 
                             //START of IF-STATEMENT:
                             if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ snapshot ->
-                                    listReference.get().addOnSuccessListener{ listSnapshot ->
-                                        val list = message.trim().split(" ")
-                                        if (list.size < 4) return@addOnSuccessListener
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                                        //START of FUNCTION: onDataChange
+                                        override fun onDataChange(snapshot: DataSnapshot){
+                                            val name = list[2]
 
-                                        val name = list[2]
-                                        val item = list.subList(3, list.size).joinToString(" ")
+                                            //START of IF-STATEMENT:
+                                            if(snapshot.hasChild("List")){
+                                                listReference.get().addOnSuccessListener{ listSnapshot ->
+                                                    var index = 1
 
-                                        var index = 1
-                                        var listKey: String? = null
+                                                    //START of FOR-LOOP:
+                                                    for(child in listSnapshot.children){
+                                                        //START of IF-STATEMENT:
+                                                        if(name == child.child("name").getValue(String::class.java)){
+                                                            val type = child.child("type").getValue(String::class.java)
+                                                            val item = list.subList(3, list.size).joinToString(" ")
 
-                                        //START of FOR-LOOP:
-                                        for(child in listSnapshot.children) {
-                                            val listName = child.child("name").getValue(String::class.java)
+                                                            //START of IF-STATEMENT:
+                                                            if((type == "public") || (type == "private") && (child.child("userKey").getValue(String::class.java) == userKey)){
+                                                                index = 1
 
-                                            //START of IF-STATEMENT
-                                            if(listName != null && listName == name){
-                                                listKey = child.key
-                                                break
+                                                                //START of FOR-LOOP:
+                                                                for(foundItem in child.child("Item").children){
+                                                                    //START of IF-STATEMENT:
+                                                                    if(item == foundItem.child("item").getValue(String::class.java)){
+                                                                        listReference.child("${child.key}/Item/${foundItem.key}").removeValue()
+                                                                        success(userKey, messageKey, "remove", name, item)
+
+                                                                        break
+                                                                    }//END of IF-STATEMENT
+
+                                                                    //START of IF-STATEMENT:
+                                                                    if(((item != foundItem.child("item").getValue(String::class.java))) && (index == child.child("Item").childrenCount.toInt())){
+                                                                        error(userKey, messageKey, "item")
+                                                                    }//END of IF-STATEMENT
+
+                                                                    index = index + 1
+                                                                }//END of FOR-LOOP
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, messageKey, "userKey")
+                                                            }//END of ELSE-STATEMENT
+
+                                                            break
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of IF-STATEMENT:
+                                                        if((name != child.child("name").getValue(String::class.java)) && (index == listSnapshot.childrenCount.toInt())){
+                                                            error(userKey, messageKey, "list")
+                                                        }//END of IF-STATEMENT
+
+                                                        index = index + 1
+                                                    }//END of FOR-LOOP
+                                                }
                                             }//END of IF-STATEMENT
-                                        }//END of FOR-LOOP
 
-                                        listReference.child("$listKey/Item").get().addOnSuccessListener{ itemSnapshot ->
-                                            index = 1
-                                            var itemKey: String? = null
+                                            //START of ELSE-STATEMENT:
+                                            else{
+                                                error(userKey, messageKey, "list")
+                                            }//END of ELSE-STATEMENT
+                                        }//END of FUNCTION: onDataChange
 
-                                            //START of FOR-LOOP:
-                                            for(child in itemSnapshot.children) {
-                                                val itemName = child.child("item").getValue(String::class.java)
-
-                                                //START of IF-STATEMENT:
-                                                if(itemName != null && itemName == item){
-                                                    itemKey = child.key
-                                                    break
-                                                }//END of IF-STATEMENT
-                                            }//END of FOR-LOOP
-
-                                            listReference.child("$listKey/Item/$itemKey").removeValue()
-                                        }
-
-                                        messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                            //START of FUNCTION: onDataChange
-                                            override fun onDataChange(snapshot: DataSnapshot){
-                                                var index = 1
-                                                var key = "message$index"
-
-                                                //START of WHILE-LOOP:
-                                                while(snapshot.hasChild(key)){
-                                                    index++
-                                                    key = "message$index"
-                                                }//END of WHILE-LOOP
-
-                                                val message = Message(aiKey, date, time, "I have successfully removed $item from the list $name...")
-                                                messageReference.child(key).setValue(message)
-                                            }//END of FUNCTION: onDataChange
-
-                                            //START of FUNCTION: onCancelled
-                                            override fun onCancelled(error: DatabaseError){
-                                            }//END of FUNCTION: onCancelled
-                                        })
-                                    }
+                                        //START of FUNCTION: onCancelled
+                                        override fun onCancelled(error: DatabaseError){
+                                        }//END of FUNCTION: onCancelled
+                                    })
                                 }
                             }//END of IF-STATEMENT
                         }
@@ -652,4 +788,125 @@ class List{
         }
 
     }//END of FUNCTION: removeItem
+
+    //START of FUNCTION: success
+    private fun success(userKey: String, messageKey: String, type: String, list: String, item: String){
+        val userReference = database.getReference("Palma/User/$userKey")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    var index = 1
+                    var key = "message$index"
+                    var response = ""
+
+                    //START of WHILE-LOOP:
+                    while(snapshot.hasChild(key)){
+                        index++
+                        key = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if((type == "command") || (type == "contact") || (type == "reminder") || (type == "load")){
+                        response = "I have successfully finished loading the $list list..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "new"){
+                        response = "I have successfully created the new list $list..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "delete"){
+                        response = "I have successfully deleted the list $list..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "add"){
+                        response = "I have successfully added the item $item in $list..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "remove"){
+                        response = "I have successfully removed the item $item from $list..."
+                    }//END of IF-STATEMENT
+
+                    val message = Message(aiKey, date, time, response)
+                    messageReference.child(key).setValue(message)
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: success
+
+    //START of FUNCTION: error
+    private fun error(userKey: String, messageKey: String, type: String){
+        val userReference = database.getReference("Palma/User/$userKey")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    var index = 1
+                    var key = "message$index"
+                    var response = ""
+
+                    //START of WHILE-LOOP:
+                    while(snapshot.hasChild(key)){
+                        index++
+                        key = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if(type == "reminder"){
+                        response = "Unfortunately the are currently no reminders..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "list"){
+                        response = "Unfortunately the list you have entered does not exist..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "exist"){
+                        response = "Unfortunately the list already exists..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "userKey"){
+                        response = "Unfortunately you are not allowed to have access to this list..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "type"){
+                        response = "Unfortunately the type you have entered is invalid..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(type == "item"){
+                        response = "Unfortunately the item you have entered does not exist..."
+                    }//END of IF-STATEMENT
+
+                    val message = Message(aiKey, date, time, response)
+                    messageReference.child(key).setValue(message)
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: error
 }//END of CLASS: List

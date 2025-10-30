@@ -35,13 +35,11 @@ class List{
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
 
-        userReference.get().addOnSuccessListener{ snapshot ->
-            val user = snapshot.getValue(User::class.java)
+        userReference.get().addOnSuccessListener{ userSnapshot ->
             val list = arrayOf(
                 "My List of Command/s:",
                 "#list command",
-                "#list contact",
-                "Hopefully I can be of service ${user?.username} *<3-"
+                "#list contact"
             )
 
             messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
@@ -61,12 +59,14 @@ class List{
                         val current = LocalDateTime.now()
                         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                        key = "message$index"
+                        val key = "message$index"
 
                         messageReference.child(key).setValue(Message(aiKey, date, time, list[i]))
 
                         index++
                     }//END of FOR-LOOP
+
+                    success(userKey, messageKey, "command", "command")
                 }//END of FUNCTION: onDataChange
 
                 //START of FUNCTION: onCancelled
@@ -77,7 +77,7 @@ class List{
     }//END of FUNCTION:
 
     //START of FUNCTION: writeContact
-    private fun writeContact(userKey: String, messageKey: String) {
+    private fun writeContact(userKey: String, messageKey: String){
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val contactReference = database.getReference("Palma/User/$userKey/Contact")
         val messageReference = database.getReference("Palma/Message/$messageKey")
@@ -114,7 +114,6 @@ class List{
 
                         //START of FOR-LOOP:
                         for(contactInfo in contactList){
-                            key = "message$index"
                             val current = LocalDateTime.now()
                             val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                             val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
@@ -123,6 +122,8 @@ class List{
                             messageReference.child(key).setValue(message)
                             index++
                         }//END of FOR-LOOP
+
+                        success(userKey, messageKey, "contact", "contact")
                     }
                 }//END of FUNCTION: onDataChange
 
@@ -133,4 +134,42 @@ class List{
             })
         }
     }//END of FUNCTION: writeContact
+
+    //START of FUNCTION: success
+    private fun success(userKey: String, messageKey: String, type: String, list: String){
+        val userReference = database.getReference("Palma/User/$userKey")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    var index = 1
+                    var key = "message$index"
+                    var response = ""
+
+                    //START of WHILE-LOOP:
+                    while(snapshot.hasChild(key)){
+                        index++
+                        key = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if((type == "command") || (type == "contact") || (type == "load")){
+                        response = "I have finished loading the $list list :D"
+                    }//END of IF-STATEMENT
+
+                    val message = Message(aiKey, date, time, response)
+                    messageReference.child(key).setValue(message)
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: success
 }//END of CLASS: List

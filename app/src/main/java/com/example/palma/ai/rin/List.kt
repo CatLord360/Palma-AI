@@ -28,6 +28,11 @@ class List{
         if(list[1] == "contact"){
             writeContact(userKey, messageKey)
         }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(list[1] == "reminder"){
+            writeReminder(userKey, messageKey)
+        }//END of IF-STATEMENT
     }//END of FUNCTION: writeList
 
     //START of FUNCTION: writeCommand
@@ -40,6 +45,7 @@ class List{
                 "List of Command/s:",
                 "#list command",
                 "#list contact",
+                "#list reminder",
                 "#reminder set daily [HH:mm] [reminder]",
                 "#reminder set weekly [day] [HH:mm] [reminder]",
                 "#reminder set monthly [dd] [HH:mm] [reminder]",
@@ -47,8 +53,7 @@ class List{
                 "#reminder delete daily [HH:mm] [reminder]",
                 "#reminder delete weekly [day] [HH:mm] [reminder]",
                 "#reminder delete monthly [dd] [HH:mm] [reminder]",
-                "#reminder delete annually [MM-dd] [HH:mm] [reminder]",
-                "Is there something I can help you with Darling?"
+                "#reminder delete annually [MM-dd] [HH:mm] [reminder]"
             )
 
             messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
@@ -68,12 +73,14 @@ class List{
                         val current = LocalDateTime.now()
                         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-                        key = "message$index"
+                        val key = "message$index"
 
                         messageReference.child(key).setValue(Message(aiKey, date, time, list[i]))
 
                         index++
                     }//END of FOR-LOOP
+
+                    success(userKey, messageKey, "command", "command")
                 }//END of FUNCTION: onDataChange
 
                 //START of FUNCTION: onCancelled
@@ -121,7 +128,6 @@ class List{
 
                         //START of FOR-LOOP:
                         for(contactInfo in contactList){
-                            key = "message$index"
                             val current = LocalDateTime.now()
                             val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                             val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
@@ -130,6 +136,8 @@ class List{
                             messageReference.child(key).setValue(message)
                             index++
                         }//END of FOR-LOOP
+
+                        success(userKey, messageKey, "contact", "contact")
                     }
                 }//END of FUNCTION: onDataChange
 
@@ -140,4 +148,148 @@ class List{
             })
         }
     }//END of FUNCTION: writeContact
+
+    //START of FUNCTION: writeReminder
+    private fun writeReminder(userKey: String, messageKey: String){
+        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val reminderReference = messageReference.child("Reminder")
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    //START of IF-STATEMENT:
+                    if(snapshot.hasChild("Reminder")){
+                        var index = 1
+                        var key = "message$index"
+
+                        //START of WHILE-LOOP:
+                        while(snapshot.hasChild(key)){
+                            index = index + 1
+                            key = "message$index"
+                        }//END of WHILE-LOOP
+
+                        reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
+                            //START of FOR-LOOP:
+                            for(reminder in reminderSnapshot.children){
+                                val current = LocalDateTime.now()
+                                val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+                                val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+                                messageReference.child("message$index").setValue(Message(aiKey, date, time, "${reminder.child("type").getValue(String::class.java)} reminder for ${reminder.child("reminder").getValue(String::class.java)}"))
+                                index = index + 1
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "daily"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: everyday"))
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "weekly"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: every ${reminder.child("day").getValue(String::class.java)}"))
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "monthly"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: ${reminder.child("date").getValue(String::class.java)} of the month"))
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if(reminder.child("type").getValue(String::class.java) == "annually"){
+                                    messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: ${reminder.child("date").getValue(String::class.java)} of the year"))
+                                }//END of IF-STATEMENT
+                                index = index + 1
+
+                                messageReference.child("message$index").setValue(Message(aiKey, date, time, "time: ${reminder.child("time").getValue(String::class.java)}"))
+                                index = index + 1
+                            }//END of FOR-LOOP
+
+                            success(userKey, messageKey, "reminder", "reminder")
+                        }
+                    }//END of IF-STATEMENT
+
+                    //START of ELSE-STATEMENT:
+                    else{
+                        error(userKey, messageKey)
+                    }//END of ELSE-STATEMENT
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: writeReminder
+
+    //START of FUNCTION: success
+    private fun success(userKey: String, messageKey: String, type: String, list: String){
+        val userReference = database.getReference("Palma/User/$userKey")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    var index = 1
+                    var key = "message$index"
+                    var response = ""
+
+                    //START of WHILE-LOOP:
+                    while(snapshot.hasChild(key)){
+                        index++
+                        key = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if((type == "command") || (type == "contact") || (type == "reminder") || (type == "load")){
+                        response = "I have finished loading $list list darling..."
+                    }//END of IF-STATEMENT
+
+                    val message = Message(aiKey, date, time, response)
+                    messageReference.child(key).setValue(message)
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: success
+
+    //START of FUNCTION: error
+    private fun error(userKey: String, messageKey: String){
+        val userReference = database.getReference("Palma/User/$userKey")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        userReference.get().addOnSuccessListener{ userSnapshot ->
+            messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+                //START of FUNCTION: onDataChange
+                override fun onDataChange(snapshot: DataSnapshot){
+                    var index = 1
+                    var key = "message$index"
+                    val response = "Sadly there are no reminders darling..."
+
+                    //START of WHILE-LOOP:
+                    while(snapshot.hasChild(key)){
+                        index++
+                        key = "message$index"
+                    }//END of WHILE-LOOP
+
+                    val message = Message(aiKey, date, time, response)
+                    messageReference.child(key).setValue(message)
+                }//END of FUNCTION: onDataChange
+
+                //START of FUNCTION: onCancelled
+                override fun onCancelled(error: DatabaseError){
+                }//END of FUNCTION: onCancelled
+            })
+        }
+    }//END of FUNCTION: error
 }//END of CLASS: List
