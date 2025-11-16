@@ -69,8 +69,8 @@ class MessageActivity : AppCompatActivity() {
                     catch(e: Exception){
                     }//END of CATCH-STATEMENT
 
-                    delay(60000)
-                }
+                    delay(90000)
+                }//END of WHILE-LOOP
             }
 
             binding.ImageContact.setOnClickListener {
@@ -83,7 +83,7 @@ class MessageActivity : AppCompatActivity() {
             binding.ButtSend.setOnClickListener {
                 writeMessage(userKey, contactKey)
             }
-        }
+        }//END of IF-STATEMENT
     }//END of FUNCTION: onCreate
 
     //START of FUNCTION: setupRecyclerView
@@ -330,31 +330,71 @@ class MessageActivity : AppCompatActivity() {
     private suspend fun findReminder(userKey: String, contactKey: String){
         val contactReference = database.getReference("Palma/User/$userKey/Contact/$contactKey")
         val current = LocalDateTime.now()
-        val currentTime = LocalTime.now()
+        val currentTime = current.toLocalTime()
         val contactSnapshot = contactReference.get().await()
+
         val messageKey = contactSnapshot.child("messageKey").getValue(String::class.java) ?: return
         val reminderReference = database.getReference("Palma/Message/$messageKey/Reminder")
         val reminderSnapshot = reminderReference.get().await()
         if (!reminderSnapshot.exists() || !reminderSnapshot.hasChildren()) return
 
+        val formatter = DateTimeFormatter.ofPattern("HH:mm")
+
         //START of FOR-LOOP:
         for(reminder in reminderSnapshot.children){
+
             val foundType = reminder.child("type").getValue(String::class.java) ?: continue
-            val foundTime = reminder.child("time").getValue(String::class.java)?.substring(0, 5)?.trim() ?: continue
-            val formatter = DateTimeFormatter.ofPattern("HH:mm")
-            val target = try {
+            val foundTime = reminder.child("time").getValue(String::class.java)
+                ?.substring(0, 5)?.trim() ?: continue
+
+            val targetTime = try {
                 LocalTime.parse(foundTime, formatter)
-            } catch (e: Exception) {
+            }catch(e: Exception){
                 continue
             }
 
-            val withinTarget = Duration.between(target, currentTime).abs().toMinutes() <= 1
+            val minutesUntil = Duration.between(currentTime, targetTime).toMinutes()
+            val minutesAbs = kotlin.math.abs(minutesUntil)
+
+            var interval = ""
+
+            //START of IF-STATEMENT:
+            if(minutesAbs <= 1){
+                interval = "now"
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT
+            if(minutesUntil == 5L){
+                interval = "soon"
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if (minutesUntil == 15L){
+                interval = "quarter-hour"
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if(minutesUntil == 30L){
+                interval = "half-hour"
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if(minutesUntil == 45L){
+                interval = "three-quarter-hour"
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
+            if(minutesUntil == 60L){
+                interval = "hour"
+            }//END of IF-STATEMENT
+
+            val withinTarget = minutesAbs <= 1
 
             //START of IF-STATEMENT:
             if(foundType == "daily"){
                 //START of IF-STATEMENT:
-                if(withinTarget){
-                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                if(withinTarget || (interval != "")){
+                    writeReminder(userKey, contactKey, reminder.key!!, messageKey, interval)
                 }//END of IF-STATEMENT
             }//END of IF-STATEMENT
 
@@ -364,19 +404,20 @@ class MessageActivity : AppCompatActivity() {
                 val currentDay = current.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.ENGLISH).lowercase()
 
                 //START of IF-STATEMENT:
-                if(currentDay == foundDay && withinTarget){
-                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                if((currentDay == foundDay) && (withinTarget || (interval != ""))){
+                    writeReminder(userKey, contactKey, reminder.key!!, messageKey, interval)
                 }//END of IF-STATEMENT
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:
             if(foundType == "monthly"){
-                val foundDate = reminder.child("date").getValue(String::class.java)?.padStart(2, '0') ?: continue
+                val foundDate = reminder.child("date").getValue(String::class.java)
+                    ?.padStart(2, '0') ?: continue
                 val currentDate = current.format(DateTimeFormatter.ofPattern("dd"))
 
                 //START of IF-STATEMENT:
-                if(currentDate == foundDate && withinTarget){
-                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                if((currentDate == foundDate) && (withinTarget || (interval != ""))){
+                    writeReminder(userKey, contactKey, reminder.key!!, messageKey, interval)
                 }//END of IF-STATEMENT
             }//END of IF-STATEMENT
 
@@ -386,87 +427,75 @@ class MessageActivity : AppCompatActivity() {
                 val currentDate = current.format(DateTimeFormatter.ofPattern("MM-dd"))
 
                 //START of IF-STATEMENT:
-                if(currentDate == foundDate && withinTarget){
-                    writeReminder(userKey, contactKey, reminder.key.toString(), messageKey)
+                if((currentDate == foundDate) && (withinTarget || (interval != ""))){
+                    writeReminder(userKey, contactKey, reminder.key!!, messageKey, interval)
                 }//END of IF-STATEMENT
             }//END of IF-STATEMENT
         }//END of FOR-LOOP
     }//END of FUNCTION: findReminder
 
     //START of FUNCTION: writeReminder
-    private fun writeReminder(userKey: String, contactKey: String, reminderKey: String, messageKey: String){
+    private fun writeReminder(userKey: String, contactKey: String, reminderKey: String, messageKey: String, interval: String){
         val contactReference = database.getReference("Palma/User/$userKey/Contact/$contactKey")
         val reminderReference = database.getReference("Palma/Message/$messageKey/Reminder/$reminderKey")
 
-        contactReference.get().addOnSuccessListener { contactSnapshot ->
-            reminderReference.get().addOnSuccessListener { reminderSnapshot ->
+        contactReference.get().addOnSuccessListener{ contactSnapshot ->
+            reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
+
                 val reminder = reminderSnapshot.child("reminder").getValue(String::class.java) ?: return@addOnSuccessListener
                 val contactType = contactSnapshot.child("type").getValue(String::class.java)
 
                 //START of IF-STATEMENT:
-                if(contactType == "ai" || contactType == "group"){
+                if(contactType == "ai"){
+                    val foundUsername = contactSnapshot.child("username").getValue(String::class.java)
+
                     //START of IF-STATEMENT:
-                    if(contactType == "ai"){
-                        val foundUsername = contactSnapshot.child("username").getValue(String::class.java)
-
-                        //START of IF-STATEMENT:
-                        if(foundUsername == "Palma"){
-                            Reminder().alert(userKey, messageKey, reminder)
-                        }//END of IF-STATEMENT
-
-                        //START of IF-STATEMENT:
-                        if(foundUsername == "Tom"){
-                            com.example.palma.ai.tom.Reminder().alert(userKey, messageKey, reminder)
-                        }//END of IF-STATEMENT
-
-                        //START of IF-STATEMENT:
-                        if(foundUsername == "Rin"){
-                            com.example.palma.ai.rin.Reminder().alert(userKey, messageKey, reminder)
-                        }//END of IF-STATEMENT
+                    if((foundUsername == "Palma") && (interval in listOf("hour", "half-hour", "soon", "now"))){
+                        Reminder().alert(userKey, messageKey, interval, reminder)
                     }//END of IF-STATEMENT
 
-                    //START of IF-STATEMENT
-                    if(contactType == "group"){
-                        val aiList = mutableListOf<String>()
+                    //START of IF-STATEMENT:
+                    if((foundUsername == "Tom") && (interval in listOf("hour", "half-hour", "soon", "now"))){
+                        com.example.palma.ai.tom.Reminder().alert(userKey, messageKey, interval, reminder)
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if((foundUsername == "Rin") && (interval in listOf("hour","three-quarter-hour","half-hour","quarter-hour","soon","now"))){
+                        com.example.palma.ai.rin.Reminder().alert(userKey, messageKey, interval, reminder)
+                    }//END of IF-STATEMENT
+                }//END of IF-STATEMENT
+
+                //START of IF-STATEMENT:
+                if(contactType == "group"){
+                    CoroutineScope(Dispatchers.IO).launch{
+                        val memberSnapshot = contactReference.child("Member").get().await()
 
                         //START of FOR-LOOP:
-                        for(member in contactSnapshot.child("Member").children){
-                            val foundUsername = member.child("username").getValue(String::class.java)
+                        for(member in memberSnapshot.children){
                             val foundType = member.child("type").getValue(String::class.java)
+                            val foundUsername = member.child("username").getValue(String::class.java)
 
                             //START of IF-STATEMENT:
-                            if(foundType == "ai" && (foundUsername == "Palma" || foundUsername == "Tom" || foundUsername == "Rin")){
-                                aiList.add(foundUsername!!)
+                            if (foundType != "ai") continue
+
+                            delay(600)
+
+                            //START of IF-STATEMENT:
+                            if((foundUsername == "Palma") && (interval in listOf("hour", "half-hour", "soon", "now"))){
+                                Reminder().alert(userKey, messageKey, interval, reminder)
+                            }//END of IF-STATEMENT
+
+                            //START of IF-STATEMENT:
+                            if((foundUsername == "Tom") && (interval in listOf("hour", "half-hour", "soon", "now"))){
+                                com.example.palma.ai.tom.Reminder().alert(userKey, messageKey, interval, reminder)
+                            }//END of IF-STATEMENT
+
+                            //START of IF-STATEMENT:
+                            if((foundUsername == "Rin") && (interval in listOf("hour","three-quarter-hour","half-hour", "quarter-hour","soon","now"))){
+                                com.example.palma.ai.rin.Reminder().alert(userKey, messageKey, interval, reminder)
                             }//END of IF-STATEMENT
                         }//END of FOR-LOOP
-
-                        //START of IF-STATEMENT:
-                        if(aiList.isNotEmpty()){
-                            lifecycleScope.launch{
-
-                                //START of FOR-LOOP:
-                                for(ai in aiList){
-
-                                    //START of IF-STATEMENT:
-                                    if(ai == "Palma"){
-                                        Reminder().alert(userKey, messageKey, reminder)
-                                    }//END of IF-STATEMENT
-
-                                    //START of IF-STATEMENT:
-                                    if(ai == "Tom"){
-                                        com.example.palma.ai.tom.Reminder().alert(userKey, messageKey, reminder)
-                                    }//END of IF-STATEMENT
-
-                                    //START of IF-STATEMENT:
-                                    if(ai == "Rin"){
-                                        com.example.palma.ai.rin.Reminder().alert(userKey, messageKey, reminder)
-                                    }//END of IF-STATEMENT
-
-                                    delay(2000)
-                                }//END of FOR-LOOP
-                            }
-                        }//END of IF-STATEMENT
-                    }//END of IF-STATEMENT
+                    }
                 }//END of IF-STATEMENT
             }
         }

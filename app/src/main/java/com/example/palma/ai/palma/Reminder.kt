@@ -45,17 +45,18 @@ class Reminder{
     }//END of FUNCTION: writeReminder
 
     //START of FUNCTION: alert
-    fun alert(userKey: String, messageKey: String, reminder: String){
+    fun alert(userKey: String, messageKey: String, interval: String, reminder: String){
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val current = LocalDateTime.now()
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        var message = ""
 
         userReference.get().addOnSuccessListener{ userSnapshot ->
             messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
                 //START of FUNCTION: onDataChange
-                override fun onDataChange(snapshot: DataSnapshot) {
+                override fun onDataChange(snapshot: DataSnapshot){
                     var index = 1
                     var key = "message$index"
 
@@ -65,11 +66,31 @@ class Reminder{
                         key = "message$index"
                     }//END of WHILE-LOOP
 
-                    messageReference.child(key).setValue(Message(aiKey, date, time, reminder))
+                    //START of IF-STATEMENT:
+                    if(interval == "hour"){
+                        message = "Hour before $reminder..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(interval == "half-hour"){
+                        message = "Half-hour before $reminder..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(interval == "soon"){
+                        message = "Almost time for $reminder..."
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(interval == "now"){
+                        message = reminder
+                    }//END of IF-STATEMENT
+
+                    messageReference.child(key).setValue(Message(aiKey, date, time, message))
                 }//END of FUNCTION: onDataChange
 
                 //START of FUNCTION: onCancelled
-                override fun onCancelled(error: DatabaseError) {
+                override fun onCancelled(error: DatabaseError){
                 }//END of FUNCTION: onCancelled
             })
         }
