@@ -191,7 +191,6 @@ class MessageActivity : AppCompatActivity() {
             binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.purple))
             binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.purple))
             binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.purple))
-            binding.ButtSend.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.purple))
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
@@ -201,7 +200,6 @@ class MessageActivity : AppCompatActivity() {
             binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.blue))
             binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.blue))
             binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.blue))
-            binding.ButtSend.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.blue))
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
@@ -211,7 +209,6 @@ class MessageActivity : AppCompatActivity() {
             binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.orange))
             binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.orange))
             binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.orange))
-            binding.ButtSend.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.orange))
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
@@ -221,7 +218,6 @@ class MessageActivity : AppCompatActivity() {
             binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.red))
             binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.red))
             binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.red))
-            binding.ButtSend.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.red))
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
@@ -231,7 +227,6 @@ class MessageActivity : AppCompatActivity() {
             binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.pink))
             binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.pink))
             binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.pink))
-            binding.ButtSend.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.pink))
         }//END of IF-STATEMENT
     }//END of FUNCTION: loadAI
 

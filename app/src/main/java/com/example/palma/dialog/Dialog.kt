@@ -8,7 +8,6 @@ import androidx.core.content.ContextCompat
 import com.example.palma.R
 import com.example.palma.databinding.DialogMessageBinding
 import com.example.palma.models.Message
-import com.example.palma.models.User
 import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -62,7 +61,7 @@ class Dialog(context: Context): AlertDialog.Builder(context){
                 binding.OutputTime.setTextColor(ContextCompat.getColor(context, R.color.purple))
                 binding.LabelMessage.setTextColor(ContextCompat.getColor(context, R.color.purple))
                 binding.OutputMessage.setTextColor(ContextCompat.getColor(context, R.color.purple))
-                binding.ButtExit.backgroundTintList = ContextCompat.getColorStateList(context, R.color.purple)
+                binding.ButtExit.imageTintList = ContextCompat.getColorStateList(context, R.color.purple)
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:
@@ -76,7 +75,7 @@ class Dialog(context: Context): AlertDialog.Builder(context){
                 binding.OutputTime.setTextColor(ContextCompat.getColor(context, R.color.blue))
                 binding.LabelMessage.setTextColor(ContextCompat.getColor(context, R.color.blue))
                 binding.OutputMessage.setTextColor(ContextCompat.getColor(context, R.color.blue))
-                binding.ButtExit.backgroundTintList = ContextCompat.getColorStateList(context, R.color.blue)
+                binding.ButtExit.imageTintList = ContextCompat.getColorStateList(context, R.color.blue)
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:
@@ -90,7 +89,7 @@ class Dialog(context: Context): AlertDialog.Builder(context){
                 binding.OutputTime.setTextColor(ContextCompat.getColor(context, R.color.orange))
                 binding.LabelMessage.setTextColor(ContextCompat.getColor(context, R.color.orange))
                 binding.OutputMessage.setTextColor(ContextCompat.getColor(context, R.color.orange))
-                binding.ButtExit.backgroundTintList = ContextCompat.getColorStateList(context, R.color.orange)
+                binding.ButtExit.imageTintList = ContextCompat.getColorStateList(context, R.color.orange)
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:
@@ -104,7 +103,7 @@ class Dialog(context: Context): AlertDialog.Builder(context){
                 binding.OutputTime.setTextColor(ContextCompat.getColor(context, R.color.red))
                 binding.LabelMessage.setTextColor(ContextCompat.getColor(context, R.color.red))
                 binding.OutputMessage.setTextColor(ContextCompat.getColor(context, R.color.red))
-                binding.ButtExit.backgroundTintList = ContextCompat.getColorStateList(context, R.color.red)
+                binding.ButtExit.imageTintList = ContextCompat.getColorStateList(context, R.color.red)
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:
@@ -118,7 +117,7 @@ class Dialog(context: Context): AlertDialog.Builder(context){
                 binding.OutputTime.setTextColor(ContextCompat.getColor(context, R.color.pink))
                 binding.LabelMessage.setTextColor(ContextCompat.getColor(context, R.color.pink))
                 binding.OutputMessage.setTextColor(ContextCompat.getColor(context, R.color.pink))
-                binding.ButtExit.backgroundTintList = ContextCompat.getColorStateList(context, R.color.pink)
+                binding.ButtExit.imageTintList = ContextCompat.getColorStateList(context, R.color.pink)
             }//END of IF-STATEMENT
         }//END of IF-STATEMENT
 

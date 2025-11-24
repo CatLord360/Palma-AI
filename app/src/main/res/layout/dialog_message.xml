@@ -2,7 +2,8 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <RelativeLayout
         android:id="@+id/Layout_Dialog"
         android:layout_width="match_parent"
@@ -93,16 +94,15 @@
                 android:text="@string/Output_Message"
                 android:textColor="@color/green"/>
 
-            <Button
+            <ImageView
                 android:id="@+id/Butt_Exit"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                android:layout_width="28dp"
+                android:layout_height="28dp"
                 android:layout_below="@id/Output_Message"
                 android:layout_centerHorizontal="true"
-                android:textSize="18sp"
-                android:text="@string/Butt_Exit"
-                android:textColor="@color/black"
-                android:backgroundTint="@color/green"/>
+                android:src="@drawable/ic_exit"
+                android:contentDescription="@string/ContentDescription_Application"
+                app:tint="@color/green"/>
         </RelativeLayout>
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

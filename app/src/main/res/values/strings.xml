@@ -42,9 +42,10 @@
     <string name="Butt_Sign"><b>sign in</b></string>
     <string name="Butt_Message"><b>send</b></string>
     <string name="Butt_Delete"><b>delete</b></string>
-    <string name="Butt_Exit"><b>x</b></string>
 
     //The CONTENT-DESCRIPTION STRING-VARIABLE/S:
     <string name="ContentDescription_Application"><b>Display Image:</b> <i>Application Logo</i></string>
     <string name="ContentDescription_Contact"><b>Display Image:</b> <i>Contact Logo</i></string>
+    <string name="ContentDescription_Send"><b>Display Image:</b> <i>Send Button</i></string>
+    <string name="ContentDescription_Exit"><b>Display Image:</b> <i>Exit Button</i></string>
 </resources>

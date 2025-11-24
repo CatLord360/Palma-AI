@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/main"
     android:layout_width="match_parent"
@@ -68,7 +67,7 @@
 
                 <EditText
                     android:id="@+id/Input_Message"
-                    android:layout_width="273dp"
+                    android:layout_width="334dp"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
                     android:inputType="textLongMessage"
@@ -79,16 +78,13 @@
                     android:textColor="@color/green"
                     android:background="@color/black"/>
 
-                <Button
+                <ImageView
                     android:id="@+id/Butt_Send"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_width="28dp"
+                    android:layout_height="28dp"
                     android:layout_toEndOf="@id/Input_Message"
                     android:layout_centerVertical="true"
-                    android:textSize="18sp"
-                    android:text="@string/Butt_Message"
-                    android:textColor="@color/green"
-                    android:backgroundTint="@color/black"/>
+                    android:src="@drawable/ic_send"/>
             </RelativeLayout>
         </RelativeLayout>
     </RelativeLayout>
