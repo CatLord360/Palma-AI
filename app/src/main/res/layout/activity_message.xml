@@ -67,9 +67,10 @@
 
                 <EditText
                     android:id="@+id/Input_Message"
-                    android:layout_width="334dp"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_centerVertical="true"
+                    android:layout_marginEnd="28dp"
                     android:inputType="textLongMessage"
                     android:autofillHints="username"
                     android:textSize="20sp"
@@ -82,9 +83,10 @@
                     android:id="@+id/Butt_Send"
                     android:layout_width="28dp"
                     android:layout_height="28dp"
-                    android:layout_toEndOf="@id/Input_Message"
+                    android:layout_alignParentEnd="true"
                     android:layout_centerVertical="true"
-                    android:src="@drawable/ic_send"/>
+                    android:src="@drawable/ic_send"
+                    android:contentDescription="@string/ContentDescription_Send"/>
             </RelativeLayout>
         </RelativeLayout>
     </RelativeLayout>

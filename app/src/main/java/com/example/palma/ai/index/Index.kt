@@ -66,36 +66,29 @@ class Index{
 
     //START of FUNCTION: writeMessage
     fun writeMessage(userKey: String, messageKey: String, message: String){
-        val listMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
-        val words = listMessage.split(Regex("\\s+"))
-
-        val stopWords = setOf("is", "am", "are", "was", "were", "do", "did", "does", "my", "the", "a", "an", "of", "in", "on", "for", "to", "what", "what's", "whats", "who", "whose", "when", "how", "can", "have", "has", "had", "i", "you", "me")
-        val questionWords = setOf("who", "whose", "what", "what's", "whats", "where", "when", "why", "how", "do", "does", "did", "can", "could", "is", "are", "will", "would", "should", "shall", "give")
-        val etiquetteWords = setOf("hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
-
-        val keywords = words.filter { it.isNotBlank() && it !in stopWords }
-
-        val isQuery = message.trim().endsWith("?") ||
-                (words.isNotEmpty() && words[0] in questionWords) ||
-                keywords.any {
-                    it in setOf("email", "birthdate", "birthday", "mobile", "username", "gender", "remember", "know", "contact")
-                }
-
-        val isEtiquette = words.any { it in etiquetteWords }
+        val list = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+        val queryKey = setOf("who", "whose", "what", "what's", "whats", "where", "when", "why", "how", "do", "does", "did", "can", "could", "is", "are", "will", "would", "should", "shall", "give")
+        val etiquetteKey = setOf("hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
+        val forecastKey = setOf("forecast", "weather", "temperature", "current", "now", "today", "past", "yesterday", "before", "future", "tomorrow", "later")
 
         //START of IF-STATEMENT:
-        if(isEtiquette){
+        if(list.any{it in etiquetteKey}){
             Etiquette().writeEtiquette(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        if(isQuery){
+        if((list.any{it in queryKey}) || (message.trim().endsWith("?"))){
             Query().writeQuery(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
         if(message.trim().startsWith("#")) {
             Command().writeCommand(userKey, messageKey, message)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(list.any {it in forecastKey}){
+            Forecast().writeForecast(userKey, messageKey, message)
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeMessage
 }//END of CLASS: Index
