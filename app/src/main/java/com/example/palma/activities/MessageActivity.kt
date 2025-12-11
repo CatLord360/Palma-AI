@@ -235,89 +235,117 @@ class MessageActivity : AppCompatActivity() {
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val contactReference = database.getReference("Palma/User/$userKey/Contact/$contactKey")
         val current = LocalDateTime.now()
-        val month = current.format(DateTimeFormatter.ofPattern("MM"))
-        val day = current.format(DateTimeFormatter.ofPattern("dd"))
-        val today = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val currentDate = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val date = current.format(DateTimeFormatter.ofPattern("MM-dd"))
+        var greeted = false
 
         userReference.get().addOnSuccessListener{ userSnapshot ->
-            val birthdate = userSnapshot.child("birthdate").getValue(String::class.java).toString()
-            val list = birthdate.lowercase().trim().split("-")
+            val birthdate = userSnapshot.child("birthdate").getValue(String::class.java)?.takeLast(5)
 
-            //START of IF-STATEMENT
-            if(month == list[1] && day == list[2]){
-                contactReference.get().addOnSuccessListener { contactSnapshot ->
-                    val messageKey = contactSnapshot.child("messageKey").getValue(String::class.java).toString()
-                    val type = contactSnapshot.child("type").getValue(String::class.java)
+            contactReference.get().addOnSuccessListener{ contactSnapshot ->
+                val messageKey = contactSnapshot.child("messageKey").getValue(String::class.java).toString()
+                val messageReference = database.getReference("Palma/Message/$messageKey")
+                val type = contactSnapshot.child("type").getValue(String::class.java)
 
-                    val messageReference = database.getReference("Palma/Message/$messageKey")
-
-                    messageReference.get().addOnSuccessListener { messageSnapshot ->
-                        var alreadyGreetedToday = false
-
+                //START of IF-STATEMENT:
+                if(birthdate == date){
+                    messageReference.get().addOnSuccessListener{ messageSnapshot ->
                         //START of FOR-LOOP:
-                        for(log in messageSnapshot.children){
-                            val logDate = log.child("date").getValue(String::class.java)
-                            val greeted = log.child("greeting").getValue(Boolean::class.java) ?: false
+                        for(message in messageSnapshot.children){
+                            val foundGreeting = message.child("greeting").getValue(String::class.java)
+                            val foundDate = message.child("date").getValue(String::class.java)
 
                             //START of IF-STATEMENT:
-                            if(logDate == today && greeted){
-                                alreadyGreetedToday = true
+                            if((foundGreeting == "true") && (currentDate == foundDate)){
+                                greeted = true
                                 break
                             }//END of IF-STATEMENT
                         }//END of FOR-LOOP
 
                         //START of IF-STATEMENT:
-                        if(!alreadyGreetedToday){
+                        if((type == "ai") && !greeted){
+                            val username = contactSnapshot.child("username").getValue(String::class.java)
 
                             //START of IF-STATEMENT:
-                            if(type == "ai"){
-                                val username = contactSnapshot.child("username").getValue(String::class.java)
-                                when(username){
-                                    "Palma" -> Greeting().writeGreeting(userKey, messageKey)
-                                    "Tom" -> com.example.palma.ai.tom.Greeting().writeGreeting(userKey, messageKey)
-                                    "Index" -> com.example.palma.ai.index.Greeting().writeGreeting(userKey, messageKey)
-                                    "Mid" -> com.example.palma.ai.mid.Greeting().writeGreeting(userKey, messageKey)
-                                    "Rin" -> com.example.palma.ai.rin.Greeting().writeGreeting(userKey, messageKey)
-                                    "Pinky" -> com.example.palma.ai.pinky.Greeting().writeGreeting(userKey, messageKey)
-                                }
+                            if(username == "Palma"){
+                                Greeting().writeGreeting(userKey, messageKey)
                             }//END of IF-STATEMENT
 
                             //START of IF-STATEMENT:
-                            if(type == "group"){
-                                CoroutineScope(Dispatchers.IO).launch{
+                            if(username == "Tom"){
+                                com.example.palma.ai.tom.Greeting().writeGreeting(userKey, messageKey)
+                            }//END of IF-STATEMENT
 
-                                    //START of TRY-STATEMENT:
-                                    try{
-                                        val memberSnapshot = contactReference.child("Member").get().await()
+                            //START of IF-STATEMENT:
+                            if(username == "Index"){
+                                com.example.palma.ai.index.Greeting().writeGreeting(userKey, messageKey)
+                            }//END of IF-STATEMENT
 
-                                        //START of FOR-LOOP:
-                                        for(member in memberSnapshot.children){
+                            //START of IF-STATEMENT:
+                            if(username == "Mid"){
+                                com.example.palma.ai.mid.Greeting().writeGreeting(userKey, messageKey)
+                            }//END of IF-STATEMENT
 
-                                            //START of IF-STATEMENT:
-                                            if(member.child("type").getValue(String::class.java) == "ai"){
-                                                delay(600)
-                                                val username = member.child("username").getValue(String::class.java).toString()
-                                                when(username){
-                                                    "Palma" -> Greeting().writeGreeting(userKey, messageKey)
-                                                    "Tom" -> com.example.palma.ai.tom.Greeting().writeGreeting(userKey, messageKey)
-                                                    "Index" -> com.example.palma.ai.index.Greeting().writeGreeting(userKey, messageKey)
-                                                    "Mid" -> com.example.palma.ai.mid.Greeting().writeGreeting(userKey, messageKey)
-                                                    "Rin" -> com.example.palma.ai.rin.Greeting().writeGreeting(userKey, messageKey)
-                                                    "Pinky" -> com.example.palma.ai.pinky.Greeting().writeGreeting(userKey, messageKey)
-                                                }
-                                            }//END of IF-STATEMENT
-                                        }//END of FOR-LOOP
-                                    }//END of TRY-STATEMENT
+                            //START of IF-STATEMENT:
+                            if(username == "Rin"){
+                                com.example.palma.ai.rin.Greeting().writeGreeting(userKey, messageKey)
+                            }//END of IF-STATEMENT
 
-                                    //START of CATCH-STATEMENT:
-                                    catch(e: Exception){
-                                    }//END of CATCH-STATEMENT
-                                }
+                            //START of IF-STATEMENT:
+                            if(username == "Pinky"){
+                                com.example.palma.ai.pinky.Greeting().writeGreeting(userKey, messageKey)
                             }//END of IF-STATEMENT
                         }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if((type == "group") && !greeted){
+                            val memberReference = contactReference.child("Member")
+
+                            memberReference.get().addOnSuccessListener{ memberSnapshot ->
+                                //START of FOR-LOOP:
+                                for(member in memberSnapshot.children){
+                                    val foundType = member.child("type").getValue(String::class.java)
+
+                                    //START of IF-STATEMENT:
+                                    if(foundType == "ai"){
+                                        val username = member.child("username").getValue(String::class.java)
+
+                                        //START of IF-STATEMENT:
+                                        if(username == "Palma"){
+                                            Greeting().writeGreeting(userKey, messageKey)
+                                        }//END of IF-STATEMENT
+
+                                        //START of IF-STATEMENT:
+                                        if(username == "Tom"){
+                                            com.example.palma.ai.tom.Greeting().writeGreeting(userKey, messageKey)
+                                        }//END of IF-STATEMENT
+
+                                        //START of IF-STATEMENT:
+                                        if(username == "Index"){
+                                            com.example.palma.ai.index.Greeting().writeGreeting(userKey, messageKey)
+                                        }//END of IF-STATEMENT
+
+                                        //START of IF-STATEMENT:
+                                        if(username == "Mid"){
+                                            com.example.palma.ai.mid.Greeting().writeGreeting(userKey, messageKey)
+                                        }//END of IF-STATEMENT
+
+                                        //START of IF-STATEMENT:
+                                        if(username == "Rin"){
+                                            com.example.palma.ai.rin.Greeting().writeGreeting(userKey, messageKey)
+                                        }//END of IF-STATEMENT
+
+                                        //START of IF-STATEMENT:
+                                        if(username == "Pinky"){
+                                            com.example.palma.ai.pinky.Greeting().writeGreeting(userKey, messageKey)
+                                        }//END of IF-STATEMENT
+                                    }//END of IF-STATEMENT
+                                }//END of FOR-LOOP
+                            }
+                        }//END of IF-STATEMENT
                     }
-                }
-            }//END of IF-STATEMENT
+                }//END of IF-STATEMENT
+            }
         }
     }//END of FUNCTION: writeGreeting
 
