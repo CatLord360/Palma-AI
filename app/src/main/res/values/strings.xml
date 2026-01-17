@@ -39,7 +39,7 @@
 
     //The BUTTON-LABEL STRING-VARIABLE/S:
     <string name="Butt_Log"><b>log in</b></string>
-    <string name="Butt_Sign"><b>sign in</b></string>
+    <string name="Butt_Sign"><b>sign up</b></string>
     <string name="Butt_Message"><b>send</b></string>
     <string name="Butt_Delete"><b>delete</b></string>
 
