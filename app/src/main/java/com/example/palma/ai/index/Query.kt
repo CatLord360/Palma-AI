@@ -492,17 +492,17 @@ class Query{
 
                     //START of IF-STATEMENT:
                     if(isYesNoQuery){
-                        "I don't know if $cleaned"
+                        "Sadly, I don't know if $cleaned"
                     }//END of IF-STATEMENT
 
                     //START of ELSE-IF STATEMENT:
                     else if(isPluralQuery){
-                        "I don't know what $cleaned are"
+                        "Sadly, I don't know what $cleaned are"
                     }//END of ELSE-IF STATEMENT
 
                     //START of ELSE-STATEMENT:
                     else{
-                        "I don't know what $cleaned is"
+                        "Sadly, I don't know what $cleaned is"
                     }//END of ELSE-STATEMENT
                 }//END of ELSE-STATEMENT
 
