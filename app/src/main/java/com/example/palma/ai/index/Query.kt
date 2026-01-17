@@ -476,7 +476,7 @@ class Query{
                         .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
                         .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
 
-                    "No, $replaced".replaceFirstChar { it.titlecase() }
+                    "Sadly, $replaced".replaceFirstChar { it.titlecase() }
                 }//END of ELSE-IF STATEMENT
 
                 //START of ELSE-STATEMENT:
