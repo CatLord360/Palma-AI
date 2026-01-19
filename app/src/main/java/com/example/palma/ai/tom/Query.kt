@@ -16,31 +16,39 @@ class Query{
 
     //START of FUNCTION: writeQuery
     fun writeQuery(userKey: String, messageKey: String, message: String){
-        val stopWords = setOf("is", "am", "are", "was", "were", "do", "did", "does", "my", "the", "a", "an", "of", "in", "on", "for", "to", "give", "what", "whats", "what's", "who", "whose", "when", "how", "can", "have", "has", "had", "i", "me", "could", "would")
+        val stopWords = setOf("is","am","are","was","were","do","did","does","my","the","a","an","of", "in","on","for","to","give","whats","what's","i","me","could","would")
+        val coreInterrogative = setOf("what","who","whom","whose","which","when","where","why","how")
+        val auxiliaryInterrogative = setOf("is","am","are","was","were", "do","does","did", "can","could","will","would", "should","shall","may","might", "have","has","had")
         val ai = setOf("you", "your", "you're")
-        val userDataFields = setOf("username", "gender", "birthdate", "birthday", "mobile", "email", "contact", "name", "number")
+        val userDataFields = setOf("username","gender","birthdate","birthday", "mobile","email","contact","name","number")
 
         val cleanedMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
         val list = cleanedMessage.split(Regex("\\s+"))
+        val coreIndex = list.indexOfFirst { it in coreInterrogative }
 
-        val keywords = list.filter { it.isNotBlank() && it !in stopWords }
-        val isAiQuery = keywords.any { it in ai }
-        val isUserQuery = keywords.any { it in userDataFields }
+        val startQuery = if(coreIndex != -1){coreIndex}
+        else{list.indexOfFirst{it in auxiliaryInterrogative}}
+
+        val query = if(startQuery != -1){list.subList(startQuery, list.size).joinToString(" ")}
+        else{cleanedMessage}
+
+        val keywords = list.filter{it.isNotBlank() && it !in stopWords}
+        val isAiQuery = keywords.any{it in ai}
+        val isUserQuery = keywords.any{it in userDataFields}
 
         //START of IF-STATEMENT:
         if(isAiQuery){
-            queryAI(messageKey, message)
+            queryAI(messageKey, query)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
         if(isUserQuery){
-            queryUser(userKey, messageKey, message)
+            queryUser(userKey, messageKey, query)
         }//END of IF-STATEMENT
 
         //START of ELSE-STATEMENT:
         else{
-            queryMessage(userKey, messageKey, message)
-        }//END of ELSE-STATEMENT
+            queryMessage(userKey, messageKey, query)}//END of ELSE-STATEMENT
     }//END of FUNCTION: writeQuery
 
     //START of FUNCTION: queryAI

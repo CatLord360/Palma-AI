@@ -68,8 +68,8 @@ class Tom{
     fun writeMessage(userKey: String, messageKey: String, message: String){
         val list = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
         val queryKey = setOf("who", "whose", "what", "what's", "whats", "where", "when", "why", "how", "do", "does", "did", "can", "could", "is", "are", "will", "would", "should", "shall", "give")
-        val etiquetteKey = setOf("hello", "hi", "hey", "greetings", "good", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
-        val forecastKey = setOf("forecast", "weather", "temperature", "current", "now", "today", "past", "yesterday", "before", "future", "tomorrow", "later")
+        val etiquetteKey = setOf("hello", "hi", "hey", "greetings", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
+        val forecastKey = setOf("forecast", "weather", "temperature")
 
         //START of IF-STATEMENT:
         if(list.any{it in etiquetteKey}){
@@ -77,18 +77,21 @@ class Tom{
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        if((list.any{it in queryKey}) || (message.trim().endsWith("?"))){
-            Query().writeQuery(userKey, messageKey, message)
+        if(list.any {it in forecastKey}){
+            Forecast().writeForecast(userKey, messageKey, message)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(!list.any{it in forecastKey}){
+            //START of IF-STATEMENT:
+            if(((list.any{it in queryKey}) || (message.trim().endsWith("?")))){
+                Query().writeQuery(userKey, messageKey, message)
+            }//END of IF-STATEMENT
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
         if(message.trim().startsWith("#")) {
             Command().writeCommand(userKey, messageKey, message)
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(list.any {it in forecastKey}){
-            Forecast().writeForecast(userKey, messageKey, message)
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeMessage
 }//END of CLASS: Tom

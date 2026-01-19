@@ -35,14 +35,19 @@ class Forecast{
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        if(list.any {it in pastKey}){
+        else if(list.any {it in pastKey}){
             pastForecast(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        if(list.any {it in futureKey}){
+        else if(list.any {it in futureKey}){
             futureForecast(userKey, messageKey, message)
         }//END of IF-STATEMENT
+
+        //START of ELSE-STATEMENT:
+        else{
+            Query().writeQuery(userKey, messageKey, message)
+        }//END of ELSE-STATEMENT
     }//END of FUNCTION: writeForecast
 
     //START of FUNCTION: currentForecast
