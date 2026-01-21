@@ -23,7 +23,7 @@ class Forecast{
 
     //START of FUNCTION: writeForecast
     fun writeForecast(userKey: String, messageKey: String, message: String){
-        val list = message.lowercase().trim().split(" ")
+        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val currentKey = setOf("current", "now", "today")
         val pastKey = setOf("past", "yesterday", "before")
         val futureKey = setOf("future", "tomorrow", "later")
