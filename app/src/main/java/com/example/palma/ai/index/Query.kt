@@ -47,7 +47,7 @@ class Query{
         }//END of IF-STATEMENT
 
         //START of ELSE-STATEMENT:
-        else{
+        if(!isAiQuery && !isUserQuery){
             queryMessage(userKey, messageKey, query)}//END of ELSE-STATEMENT
     }//END of FUNCTION: writeQuery
 
@@ -490,7 +490,7 @@ class Query{
                 //START of ELSE-STATEMENT:
                 else{
                     val cleaned = message
-                        .replace(Regex("(?i)\\b(what|is|are|am|was|were|do|does|did)\\b\\s*"), "")
+                        .replace(Regex("(?i)\\b(is|are|am|was|were|do|does|did)\\b\\s*"), "")
                         .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
                         .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
                         .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
@@ -500,17 +500,17 @@ class Query{
 
                     //START of IF-STATEMENT:
                     if(isYesNoQuery){
-                        "Sadly, I don't know if $cleaned"
+                        "Sadly, I don't know $cleaned"
                     }//END of IF-STATEMENT
 
                     //START of ELSE-IF STATEMENT:
                     else if(isPluralQuery){
-                        "Sadly, I don't know what $cleaned are"
+                        "Sadly, I don't know $cleaned are"
                     }//END of ELSE-IF STATEMENT
 
                     //START of ELSE-STATEMENT:
                     else{
-                        "Sadly, I don't know what $cleaned is"
+                        "Sadly, I don't know $cleaned is"
                     }//END of ELSE-STATEMENT
                 }//END of ELSE-STATEMENT
 
