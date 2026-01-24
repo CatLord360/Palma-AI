@@ -472,7 +472,7 @@ class Query{
 
                     //START of ELSE-STATEMENT
                     else{
-                        replaced.replaceFirstChar { it.titlecase() }
+                        "From what I know, ${replaced.replaceFirstChar{it.titlecase()}}"
                     }//END of ELSE-STATEMENT
                 }
 
