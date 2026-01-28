@@ -1,7 +1,8 @@
 package com.example.palma.models
 
-import kotlin.collections.List
-
 //START of DATA-CLASS: WeatherResponse
-data class WeatherResponse(val weather: List<Weather>, val main: Main, val name: String
+data class WeatherResponse(
+    val latitude: Double,
+    val longitude: Double,
+    val current_weather: Weather
 )//END of DATA-CLASS: WeatherResponse

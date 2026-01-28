@@ -10,30 +10,30 @@ import retrofit2.http.Query
 //START of INTERFACE: WeatherApi
 interface WeatherApi{
     //START of FUNCTION: getCurrentWeather
-    @GET("weather")
+    @GET("v1/forecast")
     fun getCurrentWeather(
-        @Query("q") city: String,
-        @Query("appid") apiKey: String,
-        @Query("units") units: String
+        @Query("latitude") lat: Double,
+        @Query("longitude") lon: Double,
+        @Query("current_weather") current: Boolean = true
     ): Call<WeatherResponse>//END of FUNCTION: getCurrentWeather
 
     //START of FUNCTION: getPastWeather
-    @GET("onecall/timemachine")
+    @GET("v1/forecast")
     fun getPastWeather(
-        @Query("lat") lat: Double,
-        @Query("lon") lon: Double,
-        @Query("dt") timestamp: Long,
-        @Query("appid") apiKey: String,
-        @Query("units") units: String
+        @Query("latitude") lat: Double,
+        @Query("longitude") lon: Double,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String,
+        @Query("daily") daily: String = "temperature_2m_max,temperature_2m_min,weathercode"
     ): Call<PastWeatherResponse>//END of FUNCTION: getPastWeather
 
     //START of FUNCTION: getFutureWeather
-    @GET("forecast")
+    @GET("v1/forecast")
     fun getFutureWeather(
-        @Query("lat") lat: Double,
-        @Query("lon") lon: Double,
-        @Query("dt") timestamp: Long,
-        @Query("appid") apiKey: String,
-        @Query("units") units: String
-    ): Call<FutureWeatherResponse>//END of FUNCTION: getFutureForecast
+        @Query("latitude") lat: Double,
+        @Query("longitude") lon: Double,
+        @Query("start_date") startDate: String,
+        @Query("end_date") endDate: String,
+        @Query("daily") daily: String = "temperature_2m_max,temperature_2m_min,weathercode"
+    ): Call<FutureWeatherResponse>//END of FUNCTION: getFutureWeather
 }//END of INTERFACE: WeatherApi
