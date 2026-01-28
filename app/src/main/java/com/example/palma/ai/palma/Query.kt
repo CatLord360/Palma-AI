@@ -16,21 +16,21 @@ class Query{
 
     //START of FUNCTION: writeQuery
     fun writeQuery(userKey: String, messageKey: String, message: String){
-        val stopWords = setOf("is","am","are","was","were","do","did","does","my","the","a","an","of", "in","on","for","to","give","whats","what's","i","me","could","would")
-        val coreInterrogative = setOf("what","who","whom","whose","which","when","where","why","how")
-        val auxiliaryInterrogative = setOf("is","am","are","was","were", "do","does","did", "can","could","will","would", "should","shall","may","might", "have","has","had")
+        val stopWords = setOf("is","am","are","was","were","did","does","my","the","a","an","of","in","on","for","to","give","whats","what's","i","me","could","would")
+        val interrogative = setOf("what","who","whom","whose","which","when","where","why","how","is","am","are","was","were","do","does","did","can","could","will","would","should","shall","may","might","have","has","had")
         val ai = setOf("you", "your", "you're")
         val userDataFields = setOf("username","gender","birthdate","birthday", "mobile","email","contact","name","number")
 
         val cleanedMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
         val list = cleanedMessage.split(Regex("\\s+"))
-        val coreIndex = list.indexOfFirst { it in coreInterrogative }
+        val lastInterrogativeIndex = list.indexOfLast { it in interrogative }
 
-        val startQuery = if(coreIndex != -1){coreIndex}
-        else{list.indexOfFirst{it in auxiliaryInterrogative}}
+        val query = if(lastInterrogativeIndex != -1){
+            list.subList(lastInterrogativeIndex, list.size).joinToString(" ")
+        }//END of IF-STATEMENT
 
-        val query = if(startQuery != -1){list.subList(startQuery, list.size).joinToString(" ")}
-        else{cleanedMessage}
+        //START of ELSE-STATEMENT:
+        else{cleanedMessage}//END of ELSE-STATEMENT
 
         val keywords = list.filter{it.isNotBlank() && it !in stopWords}
         val isAiQuery = keywords.any{it in ai} && keywords.any{it in userDataFields}
@@ -354,11 +354,11 @@ class Query{
             "is", "are", "am", "was", "were", "do", "does", "did",
             "the", "a", "an", "and", "or", "of", "to", "for", "in", "on", "at",
             "my", "your", "his", "her", "their", "our", "someone", "something",
-            "other", "they", "them", "that", "this", "these", "those", "give"
+            "other", "they", "them", "that", "this", "these", "those", "give", "know"
         )
 
         val lowerMessage = message.lowercase()
-        val questionWords = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could")
+        val questionWords = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "do")
         val isQuestion = lowerMessage.trim().endsWith("?") ||
                 lowerMessage.split(Regex("[^\\w']+")).any { it in questionWords }
 
@@ -490,7 +490,7 @@ class Query{
                 //START of ELSE-STATEMENT:
                 else{
                     val cleaned = message
-                        .replace(Regex("(?i)\\b(is|are|am|was|were|do|does|did)\\b\\s*"), "")
+                        .replace(Regex("(?i)\\b(is|are|am|you|was|were|do|does|did|know)\\b\\s*"), "")
                         .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
                         .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
                         .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")

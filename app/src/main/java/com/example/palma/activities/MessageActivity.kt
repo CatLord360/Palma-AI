@@ -567,7 +567,7 @@ class MessageActivity : AppCompatActivity() {
                                 for(member in memberSnapshot.children){
                                     //START of IF-STATEMENT:
                                     if(member.child("type").getValue(String::class.java) == "ai"){
-                                        delay(600)
+                                        delay(800)
                                         AI().writeAI(userKey, messageKey, member.child("username").getValue(String::class.java).toString(), message)
                                     }//END of IF-STATEMENT
                                 }//END of FOR-LOOP
