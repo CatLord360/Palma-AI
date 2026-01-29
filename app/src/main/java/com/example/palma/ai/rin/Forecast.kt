@@ -25,12 +25,12 @@ class Forecast{
     fun writeForecast(userKey: String, messageKey: String, message: String){
         val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val currentKey = setOf("current", "now", "today")
-        val pastKey = setOf("past", "yesterday", "before")
+        val pastKey = setOf("past", "yesterday", "before", "ago")
         val futureKey = setOf("future", "tomorrow", "later")
 
         //START of IF-STATEMENT:
         if(list.any {it in currentKey}){
-            currentForecast(userKey, messageKey)
+            currentForecast(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
@@ -50,7 +50,8 @@ class Forecast{
     }//END of FUNCTION: writeForecast
 
     //START of FUNCTION: currentForecast
-    private fun currentForecast(userKey: String, messageKey: String){
+    private fun currentForecast(userKey: String, messageKey: String, message: String){
+        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val now = LocalDateTime.now()
@@ -58,6 +59,7 @@ class Forecast{
         val time = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         val lat = 14.5995
         val lon = 120.9842
+        var forecast = ""
 
         //START of IF-STATEMENT:
         if(lat !in -90.0..90.0 || lon !in -180.0..180.0){
@@ -99,35 +101,85 @@ class Forecast{
                         key = "message$index"
                     }//END of WHILE-LOOP
 
-                    WeatherApiClient.retrofitService.getCurrentWeather(lat, lon, true)
-                        .enqueue(object : Callback<WeatherResponse> {
-                            //START of FUNCTION: onResponse
-                            override fun onResponse(
-                                call: Call<WeatherResponse>,
-                                response: Response<WeatherResponse>
-                            ) {
-                                val forecast =
-                                    if (response.isSuccessful && response.body() != null) {
-                                        val body = response.body()!!
-                                        val temp = body.current_weather.temperature
-                                        val code = body.current_weather.weathercode
-                                        "Current weather: ${weatherCode(code)}, ${temp}°C"
-                                    }
-                                    //START of ELSE-STATEMENT:
-                                    else {
-                                        "Unable to fetch current weather."
-                                    }//END of ELSE-STATEMENT
+                    WeatherApiClient.retrofitService.getCurrentWeather(lat, lon, true).enqueue(object : Callback<WeatherResponse> {
+                        //START of FUNCTION: onResponse
+                        override fun onResponse(call: Call<WeatherResponse>, response: Response<WeatherResponse>){
+                            //START of IF-STATEMENT:
+                            if(response.isSuccessful && response.body() != null){
+                                val body = response.body()!!
+                                val temp = body.current_weather.temperature
+                                val code = body.current_weather.weathercode
 
-                                val message = Message(aiKey, date, time, forecast)
-                                messageReference.child(key).setValue(message)
-                            }//END of FUNCTION: onResponse
+                                //START of IF-STATEMENT:
+                                if("current" in list){
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, its currently ${weatherCode(code)}."
+                                    }//END of IF-STATEMENT
 
-                            //START of FUNCTION: onFailure
-                            override fun onFailure(call: Call<WeatherResponse>, t: Throwable){
-                                val message = Message(aiKey, date, time, "Failed to contact weather server.")
-                                messageReference.child(key).setValue(message)
-                            }//END of FUNCTION: onFailure
-                        })
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, its currently ${temp}°C, Darling."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, its currently ${weatherCode(code)} in ${temp}°C, Darling."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if("now" in list){
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, its ${weatherCode(code)} now."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, its ${temp}°C now."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, its ${weatherCode(code)} in ${temp}°C now."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of ELSE-STATEMENT:
+                                else{
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, its ${weatherCode(code)} today."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, its ${temp}°C today."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, its ${weatherCode(code)} in ${temp}°C today."
+                                    }//END of IF-STATEMENT
+                                }//END of ELSE-STATEMENT
+                            }//END of IF-STATEMENT
+
+                            //START of ELSE-STATEMENT:
+                            else {
+                                forecast = "Unable to fetch current weather."
+                            }//END of ELSE-STATEMENT
+
+                            val message = Message(aiKey, date, time, forecast)
+                            messageReference.child(key).setValue(message)
+                        }//END of FUNCTION: onResponse
+
+                        //START of FUNCTION: onFailure
+                        override fun onFailure(call: Call<WeatherResponse>, t: Throwable){
+                            val message = Message(aiKey, date, time, "Failed to contact weather server.")
+                            messageReference.child(key).setValue(message)
+                        }//END of FUNCTION: onFailure
+                    })
                 }//END of FUNCTION: onDataChange
 
                 //START of FUNCTION: onCancelled
@@ -139,6 +191,7 @@ class Forecast{
 
     //START of FUNCTION: pastForecast
     private fun pastForecast(userKey: String, messageKey: String, message: String){
+        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val now = LocalDateTime.now()
@@ -146,7 +199,10 @@ class Forecast{
         val time = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         val words = message.lowercase().trim().split(" ")
         var days = words.firstOrNull { it.toIntOrNull() != null }?.toInt() ?: 1
-        for (word in words) {
+        var forecast = ""
+
+        //START of FOR-LOOP:
+        for(word in words){
             days = when (word) {
                 "yesterday" -> 1
                 "past" -> 2
@@ -154,7 +210,7 @@ class Forecast{
                 "ago" -> days
                 else -> days
             }
-        }
+        }//END of FOR-LOOP
 
         //START of IF-STATEMENT:
         if(days !in 1..5){
@@ -200,23 +256,90 @@ class Forecast{
                         key = "message$index"
                     }//END of WHILE-LOOP
 
-                    WeatherApiClient.retrofitService.getPastWeather(
-                        lat, lon,
-                        targetDate.format(DateTimeFormatter.ISO_DATE),
-                        targetDate.format(DateTimeFormatter.ISO_DATE)
-                    ).enqueue(object : Callback<PastWeatherResponse> {
+                    WeatherApiClient.retrofitService.getPastWeather(lat, lon, targetDate.format(DateTimeFormatter.ISO_DATE), targetDate.format(DateTimeFormatter.ISO_DATE)).enqueue(object : Callback<PastWeatherResponse> {
                         //START of FUNCTION: onResponse
                         override fun onResponse(call: Call<PastWeatherResponse>, response: Response<PastWeatherResponse>){
-                            val forecast = if (response.isSuccessful && response.body() != null){
+                            //START of IF-STATEMENT:
+                            if(response.isSuccessful && response.body() != null){
                                 val daily = response.body()!!.daily
                                 val temp = daily.temperature_2m_max.firstOrNull() ?: 0.0
                                 val code = daily.weathercode.firstOrNull() ?: 0
-                                "Weather $days day(s) ago: ${weatherCode(code)}, ${temp}°C"
-                            }
+
+                                //START of IF-STATEMENT:
+                                if("past" in list){
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} in the past."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, there was ${temp}°C in the past."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} at ${temp}°C in the past."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if("yesterday" in list){
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} yesterday."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, there was ${temp}°C yesterday."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)}, ${temp}°C yesterday."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if("before" in list){//START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} before."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, there was ${temp}°C before."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} at ${temp}°C before."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of ELSE-STATEMENT:
+                                else{
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" !in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} $days ago."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && ("weather" !in list)){
+                                        forecast = "Darling, there was ${temp}°C $days ago."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("weather" in list) && ("temperature" in list)){
+                                        forecast = "Darling, there was ${weatherCode(code)} at ${temp}°C $days ago."
+                                    }//END of IF-STATEMENT
+                                }//END of ELSE-STATEMENT
+                            }//END of IF-STATEMENT
 
                             //START of ELSE-STATEMENT:
                             else{
-                                "Unable to fetch past weather."
+                                forecast = "Unable to fetch past weather."
                             }//END of ELSE-STATEMENT:
 
                             val message = Message(aiKey, date, time, forecast)
@@ -240,22 +363,25 @@ class Forecast{
 
     //START of FUNCTION: futureForecast
     private fun futureForecast(userKey: String, messageKey: String, message: String){
+        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val now = LocalDateTime.now()
         val date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-
         val words = message.lowercase().trim().split(" ")
         var days = words.firstOrNull { it.toIntOrNull() != null }?.toInt() ?: 1
-        for (word in words) {
+        var forecast = ""
+
+        //START of FOR-LOOP:
+        for(word in words){
             days = when (word){
                 "tomorrow" -> 1
                 "future" -> 2
                 "later" -> 3
                 else -> days
             }
-        }
+        }//END of FOR-LOOP
 
         //START of IF-STATEMENT:
         if(days !in 1..5){
@@ -301,23 +427,73 @@ class Forecast{
                         key = "message$index"
                     }//END of WHILE-LOOP
 
-                    WeatherApiClient.retrofitService.getFutureWeather(
-                        lat, lon,
-                        targetDate.format(DateTimeFormatter.ISO_DATE),
-                        targetDate.format(DateTimeFormatter.ISO_DATE)
-                    ).enqueue(object : Callback<FutureWeatherResponse>{
+                    WeatherApiClient.retrofitService.getFutureWeather(lat, lon, targetDate.format(DateTimeFormatter.ISO_DATE), targetDate.format(DateTimeFormatter.ISO_DATE)).enqueue(object : Callback<FutureWeatherResponse>{
                         //START of FUNCTION: onResponse
                         override fun onResponse(call: Call<FutureWeatherResponse>, response: Response<FutureWeatherResponse>){
-                            val forecast = if (response.isSuccessful && response.body() != null){
+                            //START of IF-STATEMENT:
+                            if(response.isSuccessful && response.body() != null){
                                 val daily = response.body()!!.daily
                                 val temp = daily.temperature_2m_max.firstOrNull() ?: 0.0
                                 val code = daily.weathercode.firstOrNull() ?: 0
-                                "Weather in $days day(s): ${weatherCode(code)}, ${temp}°C"
-                            }
+
+                                //START of IF-STATEMENT:
+                                if("future" in list){
+                                    //START of IF-STATEMENT:
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
+                                        forecast = "Darling, there will be ${weatherCode(code)} in  the future."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
+                                        forecast = "Darling, there will be ${temp}°C in  the future."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                        forecast = "Darling, there will be ${weatherCode(code)} at ${temp}°C in  the future."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of IF-STATEMENT:
+                                if("tomorrow" in list){
+                                    //START of IF-STATEMENT:
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
+                                        forecast = "Darling, there will be ${weatherCode(code)} tomorrow."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
+                                        forecast = "Darling, there will be ${temp}°C tomorrow."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                        forecast = "Darling, there will be ${weatherCode(code)} at ${temp}°C tomorrow."
+                                    }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+
+                                //START of ELSE-STATEMENT:
+                                else{
+                                    //START of IF-STATEMENT:
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
+                                        forecast = "Darling, there will be ${weatherCode(code)} later."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
+                                        forecast = "Darling, there will be ${temp}°C later."
+                                    }//END of IF-STATEMENT
+
+                                    //START of IF-STATEMENT:
+                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                        forecast = "Darling, there will be ${weatherCode(code)}, ${temp}°C later."
+                                    }//END of IF-STATEMENT
+                                }//END of ELSE-STATEMENT
+                            }//END of IF-STATEMENT
 
                             //START of ELSE-STATEMENT:
                             else{
-                                "Unable to fetch future weather."
+                                forecast = "Unable to fetch future weather."
                             }//END of ELSE-STATEMENT
 
                             val message = Message(aiKey, date, time, forecast)
@@ -342,15 +518,15 @@ class Forecast{
     //START of FUNCTION: weatherCode
     private fun weatherCode(code: Int): String {
         return when(code){
-            0 -> "Clear sky"
-            1, 2, 3 -> "Partly cloudy"
-            45, 48 -> "Fog"
-            51, 53, 55 -> "Drizzle"
-            61, 63, 65 -> "Rain"
-            71, 73, 75 -> "Snow"
-            80, 81, 82 -> "Rain showers"
-            95, 96, 99 -> "Thunderstorm"
-            else -> "Unknown"
+            0 -> "clear sky"
+            1, 2, 3 -> "partly cloudy"
+            45, 48 -> "fog"
+            51, 53, 55 -> "drizzle"
+            61, 63, 65 -> "rain"
+            71, 73, 75 -> "snow"
+            80, 81, 82 -> "rain showers"
+            95, 96, 99 -> "thunderstorm"
+            else -> "unknown"
         }
     }//END of FUNCTION: weatherCode
 }//END of CLASS: Forecast
