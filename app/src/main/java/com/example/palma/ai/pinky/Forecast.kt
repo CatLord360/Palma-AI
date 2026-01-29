@@ -123,7 +123,7 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It’s cuwwently ${weatherCode(code)} at ${temp}°C~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
@@ -141,13 +141,13 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It’s ${weatherCode(code)} at ${temp}°C wight now~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
-                                //START of ELSE-STATEMENT:
-                                else{
+                                //START of IF-STATEMENT:
+                                if("today" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
                                         forecast = "It’s ${weatherCode(code)} today~"
@@ -159,10 +159,10 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It’s ${weatherCode(code)} at ${temp}°C today~"
                                     }//END of IF-STATEMENT
-                                }//END of ELSE-STATEMENT
+                                }//END of IF-STATEMENT
                             }//END of IF-STATEMENT
 
                             //START of ELSE-STATEMENT:
@@ -278,7 +278,7 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It was ${weatherCode(code)} at ${temp}°C in the past~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
@@ -296,7 +296,7 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It was ${weatherCode(code)} at ${temp}°C yestewday~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
@@ -314,16 +314,16 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It was ${weatherCode(code)} at ${temp}°C befowe~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
-                                //START of ELSE-STATEMENT:
-                                else{
+                                //START of IF-STATEMENT:
+                                if("ago" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "It was ${weatherCode(code)} ${days} day(s) ago~"
+                                        forecast = "It was ${weatherCode(code)} ${days} days ago~"
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
@@ -332,10 +332,10 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It was ${weatherCode(code)} at ${temp}°C ${days} days ago~"
                                     }//END of IF-STATEMENT
-                                }//END of ELSE-STATEMENT
+                                }//END of IF-STATEMENT
                             }//END of IF-STATEMENT
 
                             //START of ELSE-STATEMENT:
@@ -450,7 +450,7 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It’ll be ${weatherCode(code)} at ${temp}°C in the futuwe~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
@@ -468,13 +468,13 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It’ll be ${weatherCode(code)} at ${temp}°C tomowwow~"
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
-                                //START of ELSE-STATEMENT:
-                                else{
+                                //START of IF-STATEMENT:
+                                if("later" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
                                         forecast = "It’ll be ${weatherCode(code)} later~"
@@ -486,10 +486,10 @@ class Forecast{
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
-                                    if((("weather" in list) || ("forecast" in list)) || ("temperature" in list)){
+                                    if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
                                         forecast = "It’ll be ${weatherCode(code)} at ${temp}°C later~"
                                     }//END of IF-STATEMENT
-                                }//END of ELSE-STATEMENT
+                                }//END of IF-STATEMENT
                             }//END of IF-STATEMENT
 
                             //START of ELSE-STATEMENT:
