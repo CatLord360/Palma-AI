@@ -14,11 +14,6 @@ class Command{
             Contact().writeContact(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
-        //START of IF-STATEMENT
-        if(message.lowercase().trim().startsWith("#compute")){
-            Compute().writeCompute(userKey, messageKey, message)
-        }//END of IF-STATEMENT
-
         //START of IF-STATEMENT:
         if(message.lowercase().trim().startsWith("#reminder")){
             Reminder().writeReminder(userKey, messageKey, message)
