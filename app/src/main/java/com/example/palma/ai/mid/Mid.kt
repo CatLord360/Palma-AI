@@ -69,11 +69,17 @@ class Mid{
         val list = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
         val queryKey = setOf("who", "whose", "what", "what's", "whats", "where", "when", "why", "how", "do", "does", "did", "can", "could", "is", "are", "will", "would", "should", "shall", "give")
         val etiquetteKey = setOf("hello", "hi", "hey", "greetings", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
+        val curseKey = setOf("fuck", "fucking", "fucked", "shit", "bullshit", "damn", "hell", "piss", "pissed", "screw", "jackass", "asshole", "douche", "prick", "bastard", "dumbass", "moron", "idiot", "jerk", "tool", "pussy", "chicken", "coward", "weakling", "spineless", "scaredy-cat", "dick", "dickhead", "bitch", "cunt", "motherfucker", "fucker", "crap", "freaking", "frick", "heck", "darn")
         val forecastKey = setOf("forecast", "weather", "temperature")
 
         //START of IF-STATEMENT:
-        if(list.any{it in etiquetteKey}){
+        if((list.any{it in etiquetteKey}) && (list.any{it !in curseKey})){
             Etiquette().writeEtiquette(userKey, messageKey, message)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(list.any{it in curseKey}){
+            Curse().writeCurse(userKey, messageKey, message)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
