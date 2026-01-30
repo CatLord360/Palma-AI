@@ -487,7 +487,7 @@ class Forecast{
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "Will be fucking ${weatherCode(code)}, ${temp}°C later."
+                                        forecast = "Will be fucking ${weatherCode(code)} at ${temp}°C later."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
                             }//END of IF-STATEMENT

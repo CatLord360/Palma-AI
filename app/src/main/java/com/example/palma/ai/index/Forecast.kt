@@ -114,17 +114,17 @@ class Forecast{
                                 if("current" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "Its currently ${weatherCode(code)}."
+                                        forecast = "It is currently ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "Its currently ${temp}°C."
+                                        forecast = "It is currently ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "Its currently ${weatherCode(code)} in ${temp}°C."
+                                        forecast = "It is currently ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -132,17 +132,17 @@ class Forecast{
                                 if("now" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "Its ${weatherCode(code)} right now."
+                                        forecast = "It is ${weatherCode(code)} right now."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "Its ${temp}°C right now."
+                                        forecast = "It is ${temp}°C right now."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "Its ${weatherCode(code)} in ${temp}°C right now."
+                                        forecast = "It is ${weatherCode(code)} right now, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -150,17 +150,17 @@ class Forecast{
                                 if("today" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "Its ${weatherCode(code)} today."
+                                        forecast = "It is ${weatherCode(code)} today."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "Its ${temp}°C today."
+                                        forecast = "It is ${temp}°C today."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "Its ${weatherCode(code)} in ${temp}°C today."
+                                        forecast = "It is ${weatherCode(code)} today, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
                             }//END of IF-STATEMENT
@@ -269,17 +269,17 @@ class Forecast{
                                 if("past" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There were ${weatherCode(code)} in the past."
+                                        forecast = "The weather in the past was ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There were ${temp}°C in the past."
+                                        forecast = "The temperature in the past was ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There were ${weatherCode(code)} at ${temp}°C in the past."
+                                        forecast = "In the past, the weather was ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -287,17 +287,17 @@ class Forecast{
                                 if("yesterday" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There were ${weatherCode(code)} yesterday."
+                                        forecast = "The weather yesterday was ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There were ${temp}°C yesterday."
+                                        forecast = "The temperature yesterday was ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There were ${weatherCode(code)}, ${temp}°C yesterday."
+                                        forecast = "Yesterday, the weather was ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -305,17 +305,17 @@ class Forecast{
                                 if("before" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There were ${weatherCode(code)} before."
+                                        forecast = "Previously, the weather was ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There were ${temp}°C before."
+                                        forecast = "Previously, the temperature was ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There were ${weatherCode(code)} at ${temp}°C before."
+                                        forecast = "Previously, the weather was ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -323,17 +323,17 @@ class Forecast{
                                 if("ago" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There were ${weatherCode(code)} $days days ago."
+                                        forecast = "$days day(s) ago, the weather was ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There were ${temp}°C $days days ago."
+                                        forecast = "$days day(s) ago, the temperature was ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There were ${weatherCode(code)} at ${temp}°C $days days ago."
+                                        forecast = "$days day(s) ago, the weather was ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
                             }//END of IF-STATEMENT
@@ -441,17 +441,17 @@ class Forecast{
                                 if("future" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There will be ${weatherCode(code)} in  the future."
+                                        forecast = "In the future, the weather is expected to be ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There will be ${temp}°C in  the future."
+                                        forecast = "In the future, the temperature is expected to be ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There will be ${weatherCode(code)} at ${temp}°C in  the future."
+                                        forecast = "In the future, the weather is expected to be ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -459,17 +459,17 @@ class Forecast{
                                 if("tomorrow" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There will be ${weatherCode(code)} tomorrow."
+                                        forecast = "Tomorrow, the weather is expected to be ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There will be ${temp}°C tomorrow."
+                                        forecast = "Tomorrow, the temperature is expected to be ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There will be ${weatherCode(code)} at ${temp}°C tomorrow."
+                                        forecast = "Tomorrow, the weather is expected to be ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
 
@@ -477,17 +477,17 @@ class Forecast{
                                 if("later" in list){
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" !in list)){
-                                        forecast = "There will be ${weatherCode(code)} later."
+                                        forecast = "Later, the weather is expected to be ${weatherCode(code)}."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if(("temperature" in list) && (("weather" !in list) && ("forecast" !in list))){
-                                        forecast = "There will be ${temp}°C later."
+                                        forecast = "Later, the temperature is expected to be ${temp}°C."
                                     }//END of IF-STATEMENT
 
                                     //START of IF-STATEMENT:
                                     if((("weather" in list) || ("forecast" in list)) && ("temperature" in list)){
-                                        forecast = "There will be ${weatherCode(code)}, ${temp}°C later."
+                                        forecast = "Later, the weather is expected to be ${weatherCode(code)}, with a temperature of ${temp}°C."
                                     }//END of IF-STATEMENT
                                 }//END of IF-STATEMENT
                             }//END of IF-STATEMENT
