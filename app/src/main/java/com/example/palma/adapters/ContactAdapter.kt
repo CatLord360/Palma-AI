@@ -61,7 +61,7 @@ class ContactAdapter(private val context: Context, private val userKey: String, 
         //START of IF-STATEMENT:
         if(contact.username == "Palma"){
             holder.contactImage.setImageResource(R.drawable.ic_palma)
-            holder.contactOutput.setTextColor(ContextCompat.getColor(context, R.color.green))
+            holder.contactOutput.setTextColor(ContextCompat.getColor(context, R.color.primary))
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:

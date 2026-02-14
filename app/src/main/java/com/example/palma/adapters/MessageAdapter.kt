@@ -32,7 +32,7 @@ class MessageAdapter(private val context: Context, private val userKey: String, 
         layoutParams.removeRule(RelativeLayout.ALIGN_PARENT_END)
 
         //START of IF-STATEMENT:
-        if(message.userKey.toString() == "AI - 2" || message.userKey.toString() == "AI - 3" || message.userKey.toString() == "AI - 4" || message.userKey.toString() == "AI - 5" || message.userKey.toString() == "AI - 6"){
+        if(message.userKey.toString() == "AI - 1" || message.userKey.toString() == "AI - 2" || message.userKey.toString() == "AI - 3" || message.userKey.toString() == "AI - 4" || message.userKey.toString() == "AI - 5" || message.userKey.toString() == "AI - 6"){
             loadAI(holder, position)
         }//END of IF-STATEMENT
 
@@ -56,6 +56,11 @@ class MessageAdapter(private val context: Context, private val userKey: String, 
     //START of FUNCTION: loadAI
     private fun loadAI(holder: ViewHolder, position: Int){
         val message = mList[position]
+
+        //START of IF-STATEMENT:
+        if(message.userKey == "AI - 1"){
+            holder.messageOutput.backgroundTintList = ContextCompat.getColorStateList(context, R.color.primary)
+        }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
         if(message.userKey == "AI - 2"){

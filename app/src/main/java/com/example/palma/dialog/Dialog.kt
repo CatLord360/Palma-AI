@@ -48,6 +48,14 @@ class Dialog(context: Context): AlertDialog.Builder(context){
             if(message.userKey == "AI - 1"){
                 binding.ImageContact.setImageResource(R.drawable.ic_palma)
                 binding.OutputUsername.text = "Palma"
+                binding.LayoutHeader.setBackgroundColor(ContextCompat.getColor(context, R.color.primary))
+                binding.LabelDate.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                binding.OutputDate.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                binding.LabelTime.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                binding.OutputTime.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                binding.LabelMessage.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                binding.OutputMessage.setTextColor(ContextCompat.getColor(context, R.color.primary))
+                binding.ButtExit.imageTintList = ContextCompat.getColorStateList(context, R.color.primary)
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:

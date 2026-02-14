@@ -10,7 +10,7 @@
         android:id="@+id/Layout_Cardview"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/green">
+        android:background="@color/secondary">
         <ImageView
             android:id="@+id/Image_Contact"
             android:layout_width="150dp"

@@ -25,6 +25,6 @@
             android:layout_centerHorizontal="true"
             android:textSize="10sp"
             android:text="@string/Output_Contact"
-            android:textColor="@color/green"/>
+            android:textColor="@color/secondary"/>
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

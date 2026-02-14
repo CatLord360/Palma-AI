@@ -14,7 +14,7 @@
             android:id="@+id/Layout_Header"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@color/green">
+            android:background="@color/secondary">
             <ImageView
                 android:id="@+id/Image_Contact"
                 android:layout_width="50dp"
@@ -45,7 +45,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:text="@string/Label_Date"
-                android:textColor="@color/green"/>
+                android:textColor="@color/secondary"/>
 
             <TextView
                 android:id="@+id/Output_Date"
@@ -54,7 +54,7 @@
                 android:layout_toEndOf="@id/Label_Date"
                 android:textSize="18sp"
                 android:text="@string/Output_Date"
-                android:textColor="@color/green"/>
+                android:textColor="@color/secondary"/>
 
             <TextView
                 android:id="@+id/Label_Time"
@@ -63,7 +63,7 @@
                 android:layout_below="@id/Output_Date"
                 android:textSize="18sp"
                 android:text="@string/Label_Time"
-                android:textColor="@color/green"/>
+                android:textColor="@color/secondary"/>
 
             <TextView
                 android:id="@+id/Output_Time"
@@ -73,7 +73,7 @@
                 android:layout_toEndOf="@id/Label_Time"
                 android:textSize="18sp"
                 android:text="@string/Output_Time"
-                android:textColor="@color/green"/>
+                android:textColor="@color/secondary"/>
 
             <TextView
                 android:id="@+id/Label_Message"
@@ -82,7 +82,7 @@
                 android:layout_below="@id/Output_Time"
                 android:textSize="18sp"
                 android:text="@string/Label_Message"
-                android:textColor="@color/green"/>
+                android:textColor="@color/secondary"/>
 
             <TextView
                 android:id="@+id/Output_Message"
@@ -92,7 +92,7 @@
                 android:layout_toEndOf="@id/Label_Message"
                 android:textSize="18sp"
                 android:text="@string/Output_Message"
-                android:textColor="@color/green"/>
+                android:textColor="@color/secondary"/>
 
             <ImageView
                 android:id="@+id/Butt_Exit"
@@ -102,7 +102,7 @@
                 android:layout_centerHorizontal="true"
                 android:src="@drawable/ic_exit"
                 android:contentDescription="@string/ContentDescription_Application"
-                app:tint="@color/green"/>
+                app:tint="@color/secondary"/>
         </RelativeLayout>
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

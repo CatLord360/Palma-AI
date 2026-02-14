@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.LogActivity"
-    android:background="@color/green">
+    android:background="@color/primary">
     <RelativeLayout
         android:id="@+id/Layout_Activity"
         android:layout_width="match_parent"
@@ -29,7 +29,7 @@
             android:layout_centerHorizontal="true"
             android:textSize="30sp"
             android:text="@string/app_name"
-            android:textColor="@color/green"/>
+            android:textColor="@color/primary"/>
 
         <RelativeLayout
             android:id="@+id/Layout_Log"
@@ -44,7 +44,7 @@
                 android:layout_height="wrap_content"
                 android:textSize="18sp"
                 android:text="@string/Label_Email"
-                android:textColor="@color/green"/>
+                android:textColor="@color/primary"/>
 
             <EditText
                 android:id="@+id/Input_Email"
@@ -56,7 +56,7 @@
                 android:textSize="20sp"
                 android:hint="@string/Hint_Email"
                 android:textColorHint="@color/black"
-                android:background="@color/green"/>
+                android:background="@color/primary"/>
 
             <TextView
                 android:id="@+id/Label_Password"
@@ -65,7 +65,7 @@
                 android:layout_below="@id/Input_Email"
                 android:textSize="18sp"
                 android:text="@string/Label_Password"
-                android:textColor="@color/green"/>
+                android:textColor="@color/primary"/>
 
             <EditText
                 android:id="@+id/Input_Password"
@@ -78,7 +78,7 @@
                 android:textSize="20sp"
                 android:hint="@string/Hint_Password"
                 android:textColorHint="@color/black"
-                android:background="@color/green"/>
+                android:background="@color/primary"/>
 
             <Button
                 android:id="@+id/Butt_Log"
@@ -89,7 +89,7 @@
                 android:textSize="18sp"
                 android:text="@string/Butt_Log"
                 android:textColor="@color/black"
-                android:backgroundTint="@color/green"/>
+                android:backgroundTint="@color/primary"/>
 
             <Button
                 android:id="@+id/Butt_Sign"
@@ -99,7 +99,7 @@
                 android:textSize="18sp"
                 android:text="@string/Butt_Sign"
                 android:textColor="@color/black"
-                android:backgroundTint="@color/green"/>
+                android:backgroundTint="@color/primary"/>
         </RelativeLayout>
     </RelativeLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

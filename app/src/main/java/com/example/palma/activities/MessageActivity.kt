@@ -141,8 +141,20 @@ class MessageActivity : AppCompatActivity() {
             }//END of IF-STATEMENT
 
             //START of IF-STATEMENT:
+            if(snapshot.child("type").getValue(String::class.java).toString() == "user"){
+                binding.LayoutHeader.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+                binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+                binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+                binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+            }//END of IF-STATEMENT
+
+            //START of IF-STATEMENT:
             if(snapshot.child("type").getValue(String::class.java).toString() == "group"){
                 binding.ImageContact.setImageResource(R.drawable.ic_group)
+                binding.LayoutHeader.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+                binding.LayoutSend.setBackgroundColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+                binding.InputMessage.setHintTextColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
+                binding.InputMessage.setTextColor(ContextCompat.getColor(this@MessageActivity, R.color.secondary))
             }//END of IF-STATEMENT
 
             messageReference.addValueEventListener(object: ValueEventListener{

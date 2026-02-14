@@ -6,7 +6,7 @@
     android:id="@+id/main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/green"
+    android:background="@color/primary"
     android:fitsSystemWindows="true"
     tools:context=".activities.MessageActivity">
     <RelativeLayout
@@ -35,7 +35,7 @@
                 android:id="@+id/Layout_Header"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
-                android:background="@color/green"
+                android:background="@color/primary"
                 app:layout_constraintTop_toTopOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -72,7 +72,7 @@
                 android:id="@+id/Layout_Send"
                 android:layout_width="0dp"
                 android:layout_height="50dp"
-                android:background="@color/green"
+                android:background="@color/primary"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
@@ -87,8 +87,8 @@
                     android:autofillHints="name"
                     android:textSize="20sp"
                     android:hint="@string/Hint_Message"
-                    android:textColorHint="@color/green"
-                    android:textColor="@color/green"
+                    android:textColorHint="@color/primary"
+                    android:textColor="@color/primary"
                     android:background="@color/black"/>
 
                 <ImageView

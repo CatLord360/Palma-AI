@@ -47,6 +47,7 @@ class PersonalAdapter(private val context: Context, private val mList: List<Cont
         //START of IF-STATEMENT:
         if(contact.username == "Palma"){
             holder.image.setImageResource(R.drawable.ic_palma)
+            holder.layout.setBackgroundColor(ContextCompat.getColor(context, R.color.primary))
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:

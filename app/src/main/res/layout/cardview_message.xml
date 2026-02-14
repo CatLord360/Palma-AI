@@ -18,6 +18,6 @@
             android:textAlignment="textStart"
             android:text="@string/Output_Message"
             android:textColor="@color/black"
-            app:backgroundTint="@color/green"/>
+            app:backgroundTint="@color/secondary"/>
     </RelativeLayout>
 </androidx.cardview.widget.CardView>

@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activities.ContactActivity"
-    android:background="@color/green">
+    android:background="@color/primary">
     <RelativeLayout
         android:id="@+id/Layout_Activity"
         android:layout_width="match_parent"
