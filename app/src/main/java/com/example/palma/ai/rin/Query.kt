@@ -1,5 +1,6 @@
 package com.example.palma.ai.rin
 
+import android.util.Log
 import com.example.palma.models.Message
 import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
@@ -13,17 +14,24 @@ import java.time.format.DateTimeFormatter
 class Query{
     private val database = Firebase.database
     private val aiKey = "AI - 5"
+    private val cancel = setOf(
+        "what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "would",
+        "is", "are", "am", "was", "were", "do", "does", "did",
+        "the", "a", "an", "and", "or", "of", "to", "for", "in", "on", "at",
+        "my", "your", "his", "her", "their", "our", "someone", "something",
+        "other", "they", "them", "that", "this", "these", "those", "give", "know"
+    )
 
     //START of FUNCTION: writeQuery
     fun writeQuery(userKey: String, messageKey: String, message: String){
         val stopWords = setOf("is","am","are","was","were","did","does","my","the","a","an","of","in","on","for","to","give","whats","what's","i","me","could","would")
-        val interrogative = setOf("what","who","whom","whose","which","when","where","why","how","is","am","are","was","were","do","does","did","can","could","will","would","should","shall","may","might","have","has","had")
+        val interrogative = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "do")
         val ai = setOf("you", "your", "you're")
         val userDataFields = setOf("username","gender","birthdate","birthday", "mobile","email","contact","name","number")
 
         val cleanedMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
         val list = cleanedMessage.split(Regex("\\s+"))
-        val lastInterrogativeIndex = list.indexOfLast { it in interrogative }
+        val lastInterrogativeIndex = list.indexOfLast{it in interrogative}
 
         val query = if(lastInterrogativeIndex != -1){
             list.subList(lastInterrogativeIndex, list.size).joinToString(" ")
@@ -35,20 +43,24 @@ class Query{
         val keywords = list.filter{it.isNotBlank() && it !in stopWords}
         val isAiQuery = keywords.any{it in ai} && keywords.any{it in userDataFields}
         val isUserQuery = keywords.any{it in userDataFields}
+        var classification = ""
 
         //START of IF-STATEMENT:
         if(isAiQuery){
-            queryAI(messageKey, query)
+            classification = "ai"
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
         if(isUserQuery){
-            queryUser(userKey, messageKey, query)
+            classification = "user"
         }//END of IF-STATEMENT
 
         //START of ELSE-STATEMENT:
         if(!isAiQuery && !isUserQuery){
-            queryMessage(userKey, messageKey, query)}//END of ELSE-STATEMENT
+            classification = "log"
+        }//END of IF-STATEMENT
+
+        queryLog(userKey, messageKey, classification, query)
     }//END of FUNCTION: writeQuery
 
     //START of FUNCTION: queryAI
@@ -137,399 +149,393 @@ class Query{
     }//END of FUNCTION: queryAI
 
     //START of FUNCTION: queryUser
-    private fun queryUser(userKey: String, messageKey: String, message: String){
-        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+    private fun queryUser(userKey: String, messageKey: String, query: String){
+        val userReference = database.getReference("Palma/User")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val current = LocalDateTime.now()
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
-        val queryMessage = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim()
-        val words = queryMessage.split(Regex("[^\\w']+"))
+        val selfKey = setOf("my", "me", "mine", "i")
+        val otherKey = setOf("their", "his", "her", "someone", "other", "they", "them", "of", "theirs", "him", "hers", "person", "user", "someone\'s", "somebody", "someones", "somebody\'s")
+        val requirementKey = setOf("username", "user", "name", "birthdate", "birthday", "birth", "gender", "sex", "email", "mail", "address", "mobile", "phone", "number", "contact")
+        val list = query.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("[^\\w']+"))
+        val foundRequirement = list.map{it.removeSuffix("s")}.filter{it in requirementKey}
+        val keywords = list.filter{it !in cancel && it !in requirementKey}.toSet()
 
-        val selfIndicators = setOf("my", "me", "mine", "i")
-        val otherIndicators = setOf("their", "his", "her", "someone", "other", "they", "them")
+        var foundUsername = ""
+        var foundGender = ""
+        var foundBirthdate = ""
+        var foundMobile = ""
+        var foundEmail = ""
 
-        val isSelfQuery = words.any { it in selfIndicators }
-        val isOtherQuery = !isSelfQuery && (
-                words.any { it in otherIndicators } ||
-                        queryMessage.contains(Regex("of\\s+[a-z0-9]+"))
-                )
-
-        val queryType = when {
-            isSelfQuery -> "self"
-            isOtherQuery -> "other"
-            else -> "unknown"
-        }
-
-        //START of IF-STATEMENT:
-        if(queryType == "self"){
-            userReference.addListenerForSingleValueEvent(object : ValueEventListener{
-                //START of FUNCTION: onDataChange
-                override fun onDataChange(snapshot: DataSnapshot){
-                    val username = snapshot.child("username").getValue(String::class.java)
-                    val gender = snapshot.child("gender").getValue(String::class.java)
-                    val birthdate = snapshot.child("birthdate").getValue(String::class.java)
-                    val email = snapshot.child("email").getValue(String::class.java)
-                    val mobile = snapshot.child("mobile").getValue(String::class.java)
-
-                    val fieldMap = mapOf(
-                        "username" to Pair(setOf("username", "user", "name"), username),
-                        "gender" to Pair(setOf("gender", "sex"), gender),
-                        "birthdate" to Pair(setOf("birthdate", "birthday", "birth"), birthdate),
-                        "email" to Pair(setOf("email", "mail"), email),
-                        "mobile" to Pair(setOf("mobile", "phone", "number", "contact"), mobile)
-                    )
-
-                    val parts = mutableListOf<String>()
-
-                    //START of FOR-LOOP:
-                    for((label, pair) in fieldMap){
-                        val (keywords, value) = pair
-
-                        //START of IF-STATEMENT:
-                        if(words.any { it in keywords }){
-                            parts.add("$label is $value...")
-                        }//END of IF-STATEMENT
-                    }//END of FOR-LOOP
-
-                    val responseText = if (parts.isNotEmpty()) {
-                        val joined = when (parts.size) {
-                            1 -> parts[0]
-                            2 -> parts.joinToString(" and ")
-                            else -> parts.dropLast(1).joinToString(", ") + ", and " + parts.last() + "..."
-                        }
-                        "Your $joined."
-                    } else {
-                        "I couldn't determine which specific information you're asking about, but your username is $username, gender is $gender, and birthdate is $birthdate."
-                    }
-
-                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
-                        //START of FUNCTION: onDataChange
-                        override fun onDataChange(messageSnapshot: DataSnapshot){
-                            var index = 1
-                            var key = "message$index"
-
-                            //START of WHILE-LOOP:
-                            while(messageSnapshot.hasChild(key)){
-                                index++
-                                key = "message$index"
-                            }//END of WHILE-LOOP
-
-                            val responseMessage = Message(aiKey, date, time, responseText)
-                            messageReference.child(key).setValue(responseMessage)
-                        }//END of FUNCTION: onDataChange
-
-                        //START of FUNCTION: onCancelled
-                        override fun onCancelled(error: DatabaseError){
-                        }//END of FUNCTION: onCancelled
-                    })
-                }//END of FUNCTION: onDataChange
-
-                //START of FUNCTION: onCancelled
-                override fun onCancelled(error: DatabaseError){
-                }//END of FUNCTION: onCancelled
-            })
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(queryType == "other"){
-            val otherReference = database.getReference("Palma/User")
-            val dataKeywords = mapOf(
-                "username" to setOf("username", "user", "name"),
-                "gender" to setOf("gender", "sex"),
-                "birthdate" to setOf("birthdate", "birthday", "birth"),
-                "email" to setOf("email", "mail"),
-                "mobile" to setOf("mobile", "phone", "number", "contact")
-            )
-
-            val queryWords = words.toSet()
-
-            val foundData = mutableListOf<String>()
-
-            //START of FOR-LOOP:
-            for((field, keywords) in dataKeywords){
-                //START of IF-STATEMENT:
-                if(queryWords.any { it in keywords }){
-                    foundData.add(field)
-                }//END of IF-STATEMENT
-            }//END of FOR-LOOP
-
-            val knownWords = dataKeywords.values.flatten().toSet() + setOf(
-                "what", "whats", "what's", "is", "the", "of", "and", "their", "his", "her", "someone", "other", "they", "them",
-                "when", "where", "how", "who", "whose", "which", "do", "does", "did", "a", "an", "to", "for", "about"
-            )
-
-            val clues = queryWords.filterNot { it in knownWords }
-
-            otherReference.addListenerForSingleValueEvent(object : ValueEventListener{
-                //START of FUNCTION: onDataChange
-                override fun onDataChange(snapshot: DataSnapshot){
-                    var foundUserKey: String? = null
-                    var foundUserData: Map<String, String>? = null
-                    var foundUsername = "unknown"
-
-                    //START of FOR-LOOP
-                    loop@ for(userSnapshot in snapshot.children){
-                        val personalInfo = userSnapshot.child("Personal Information")
-                        val usernameVal = personalInfo.child("username").getValue(String::class.java).toString()
-                        val emailVal = personalInfo.child("email").getValue(String::class.java).toString()
-                        val mobileVal = personalInfo.child("mobile").getValue(String::class.java).toString()
-
-                        //START of IF-STATEMENT:
-                        if(clues.any { clue ->
-                                usernameVal.lowercase().contains(clue.lowercase()) ||
-                                        emailVal.lowercase().contains(clue.lowercase()) ||
-                                        mobileVal.lowercase().contains(clue.lowercase())
-                            }){
-                            foundUserKey = userSnapshot.key
-                            foundUsername = personalInfo.child("username").getValue(String::class.java).toString()
-                            foundUserData = mapOf(
-                                "username" to foundUsername,
-                                "gender" to (personalInfo.child("gender").getValue(String::class.java).toString()),
-                                "birthdate" to (personalInfo.child("birthdate").getValue(String::class.java).toString()),
-                                "email" to (personalInfo.child("email").getValue(String::class.java).toString()),
-                                "mobile" to (personalInfo.child("mobile").getValue(String::class.java).toString())
-                            )
-                            break@loop
-                        }//END of IF-STATEMENT
-                    }//END of FOR-LOOP
-
-                    val responseText = if (foundUserData != null && foundData.isNotEmpty()) {
-                        val parts = foundData.map { field ->
-                            "$field is ${foundUserData[field]}"
-                        }
-
-                        val joinedParts = when (parts.size) {
-                            1 -> parts[0]
-                            2 -> parts.joinToString(" and ")
-                            else -> parts.dropLast(1).joinToString(", ") + ", and " + parts.last()
-                        }
-
-                        "$foundUsername's $joinedParts."
-                    } else if (foundUserData != null) {
-                        "${foundUsername}'s username is ${foundUserData["username"]}, gender is ${foundUserData["gender"]}, and birthdate is ${foundUserData["birthdate"]}."
-                    } else {
-                        "I couldn't find anyone matching the clues: ${clues.joinToString(", ")}."
-                    }
-
-                    messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
-                        //START of FUNCTION: onDataChange
-                        override fun onDataChange(messageSnapshot: DataSnapshot){
-                            var index = 1
-                            var key = "message$index"
-
-                            //START of WHILE-LOOP:
-                            while(messageSnapshot.hasChild(key)){
-                                index++
-                                key = "message$index"
-                            }//END of WHILE-LOOP
-
-                            val responseMessage = Message(aiKey, date, time, responseText)
-                            messageReference.child(key).setValue(responseMessage)
-                        }//END of FUNCTION: onDataChange
-
-                        //START of FUNCTION: onCancelled
-                        override fun onCancelled(error: DatabaseError){
-                        }//END of FUNCTION: onCancelled
-                    })
-                }//END of FUNCTION: onDataChange
-
-                //START of FUNCTION: onCancelled
-                override fun onCancelled(error: DatabaseError){
-                }//END of FUNCTION: onCancelled
-            })
-        }//END of IF-STATEMENT
-    }//END of FUNCTION: queryUser
-
-    //START of FUNCTION: queryMessage
-    private fun queryMessage(userKey: String, messageKey: String, message: String){
-        val messageReference = database.getReference("Palma/Message/$messageKey")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-
-        val stopWords = setOf(
-            "what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "would",
-            "is", "are", "am", "was", "were", "do", "does", "did",
-            "the", "a", "an", "and", "or", "of", "to", "for", "in", "on", "at",
-            "my", "your", "his", "her", "their", "our", "someone", "something",
-            "other", "they", "them", "that", "this", "these", "those", "give", "know"
-        )
-
-        val lowerMessage = message.lowercase()
-        val questionWords = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "do")
-        val isQuestion = lowerMessage.trim().endsWith("?") ||
-                lowerMessage.split(Regex("[^\\w']+")).any { it in questionWords }
-
-        if (!isQuestion) return
-
-        val messageWords = lowerMessage.split(Regex("[^\\w']+")).filter { it.isNotBlank() }
-        val keywords = messageWords.filter { it !in stopWords }.toSet()
-
-        val lastKeyword = keywords.lastOrNull() ?: ""
-        val isPluralQuery = lowerMessage.contains(Regex("\\bare\\b")) || (lastKeyword.endsWith("s") && !lastKeyword.endsWith("ss"))
-        val isYesNoQuery = lowerMessage.matches(Regex("^(is|are|was|were|do|does|did)\\b.*", RegexOption.IGNORE_CASE))
-
-        messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
+        messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
             //START of FUNCTION: onDataChange
-            override fun onDataChange(snapshot: DataSnapshot){
-                val messagesList = snapshot.children.mapNotNull { child ->
-                    val msg = child.getValue(Message::class.java)
-                    if (msg != null) Pair(child.key ?: "", msg) else null
-                }.sortedBy {
-                    it.first.removePrefix("message").toIntOrNull() ?: Int.MAX_VALUE
-                }
-
-                val matchedAnswers = mutableListOf<String>()
-                var relatedAnswer: String? = null
-                var hasKeywordContext = false
-
-                //START of FOR-LOOP:
-                for((_, prevMsg) in messagesList.asReversed()){
-                    val prevText = prevMsg.message?.lowercase() ?: ""
-                    val prevUser = prevMsg.userKey
-                    val prevIsQuestion = prevText.trim().endsWith("?") ||
-                            prevText.split(Regex("\\W+")).any { it in questionWords }
-
-                    //START of IF-STATEMENT:
-                    if(prevUser == userKey && !prevIsQuestion){
-                        val prevWords = prevText.split(Regex("\\W+")).toSet()
-
-                        val allKeywordsMatch = keywords.all { keyword ->
-                            keyword in prevWords ||
-                                    (keyword.endsWith("s") && keyword.removeSuffix("s") in prevWords) ||
-                                    (keyword + "s" in prevWords)
-                        }
-
-                        val partialKeywordMatch = keywords.any { keyword ->
-                            keyword in prevWords ||
-                                    (keyword.endsWith("s") && keyword.removeSuffix("s") in prevWords) ||
-                                    (keyword + "s" in prevWords)
-                        }
-
-                        //START of IF-STATEMENT:
-                        if(allKeywordsMatch){
-                            matchedAnswers.add(prevMsg.message ?: "")
-                        }//END of IF-STATEMENT
-
-                        //START of ELSE-IF STATEMENT:
-                        else if (partialKeywordMatch){
-                            hasKeywordContext = true
-                            relatedAnswer = prevMsg.message
-                        }//END of ELSE-IF STATEMENT
-                    }//END of IF-STATEMENT
-                }//END of FOR-LOOP
-
-                val responseText = if (matchedAnswers.isNotEmpty()){
-                    val replaced = matchedAnswers[0]
-                        .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
-                        .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
-                        .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
-                        .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
-
-                    //START of IF-STATEMENT:
-                    if(isYesNoQuery){
-                        "Yes Darling, $replaced".replaceFirstChar { it.titlecase() }
-                    }//END of IF-STATEMENT
-
-                    //START of ELSE-IF STATEMENT:
-                    else if(isPluralQuery){
-                        val extractedAnswers = matchedAnswers.mapNotNull { ans ->
-                            val words = ans.lowercase().split(Regex("[^\\w']+")).filter { it.isNotBlank() && it !in stopWords }
-                            val keyword = lastKeyword.lowercase().removeSuffix("s")
-
-                            val indexOfIs = words.indexOf("is")
-                            val candidate = if (indexOfIs > 0) words[indexOfIs - 1] else null
-
-                            val chosen = when {
-                                candidate != null && candidate != keyword -> candidate
-                                else -> words.find { it != keyword }
-                            }
-
-                            chosen
-                        }.distinct()
-
-                        val joined = when (extractedAnswers.size){
-                            0 -> "unknown"
-                            1 -> extractedAnswers[0]
-                            2 -> extractedAnswers.joinToString(" and ")
-                            else -> extractedAnswers.dropLast(1).joinToString(", ") + ", and " + extractedAnswers.last()
-                        }
-
-                        val pluralKeyword = if (lastKeyword.endsWith("s")) lastKeyword else lastKeyword + "s"
-
-                        //START of IF-STATEMENT:
-                        if("favorite" in keywords){
-                            "Your favorite $pluralKeyword are $joined".replaceFirstChar { it.titlecase() }
-                        }//END of IF-STATEMENT
-
-                        //START of ELSE-STATEMENT:
-                        else{
-                            "$pluralKeyword are $joined".replaceFirstChar { it.titlecase() }
-                        }//END of ELSE-STATEMENT
-                    }//END of ELSE-IF STATEMENT
-
-                    //START of ELSE-STATEMENT
-                    else{
-                        "${replaced.replaceFirstChar{it.titlecase()}}, Darling"
-                    }//END of ELSE-STATEMENT
-                }
-
-                //START of ELSE-IF STATEMENT:
-                else if(isYesNoQuery && hasKeywordContext && relatedAnswer != null){
-                    val replaced = relatedAnswer
-                        .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
-                        .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
-                        .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
-                        .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
-
-                    "No Darling, $replaced".replaceFirstChar { it.titlecase() }
-                }//END of ELSE-IF STATEMENT
-
-                //START of ELSE-STATEMENT:
-                else{
-                    val cleaned = message
-                        .replace(Regex("(?i)\\b(is|are|am|you|was|were|do|does|did|know)\\b\\s*"), "")
-                        .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
-                        .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
-                        .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
-                        .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
-                        .removeSuffix("?")
-                        .trim()
-
-                    //START of IF-STATEMENT:
-                    if(isYesNoQuery){
-                        "I don't know $cleaned Darling"
-                    }//END of IF-STATEMENT
-
-                    //START of ELSE-IF STATEMENT:
-                    else if(isPluralQuery){
-                        "I don't know $cleaned are Darling"
-                    }//END of ELSE-IF STATEMENT
-
-                    //START of ELSE-STATEMENT:
-                    else{
-                        "I don't know $cleaned is Darling"
-                    }//END of ELSE-STATEMENT
-                }//END of ELSE-STATEMENT
-
-                var newIndex = 1
-                var newKey = "message$newIndex"
+            override fun onDataChange(messageSnapshot: DataSnapshot){
+                var index = 1
+                var newLogKey = "message$index"
 
                 //START of WHILE-LOOP:
-                while(snapshot.hasChild(newKey)){
-                    newIndex++
-                    newKey = "message$newIndex"
+                while(messageSnapshot.hasChild(newLogKey)){
+                    index++
+                    newLogKey = "message$index"
                 }//END of WHILE-LOOP
 
-                val responseMessage = Message(userKey = aiKey, date = date, time = time, message = responseText)
-                messageReference.child(newKey).setValue(responseMessage)
+                //START of IF-STATEMENT:
+                if(list.any{it in selfKey}){
+                    userReference.child("$userKey/Personal Information").get().addOnSuccessListener{ userSnapshot ->
+                        foundUsername = userSnapshot.child("username").getValue(String::class.java).toString()
+                        foundGender = userSnapshot.child("gender").getValue(String::class.java).toString()
+                        foundBirthdate = userSnapshot.child("birthdate").getValue(String::class.java).toString()
+                        foundMobile = userSnapshot.child("mobile").getValue(String::class.java).toString()
+                        foundEmail = userSnapshot.child("email").getValue(String::class.java).toString()
+
+                        val requirementMap = mapOf(
+                            listOf("username", "user", "name") to foundUsername,
+                            listOf("birthdate", "birthday", "birth") to foundBirthdate,
+                            listOf("gender", "sex") to foundGender,
+                            listOf("email", "mail", "address") to foundEmail,
+                            listOf("mobile", "phone", "number", "contact") to foundMobile
+                        )
+
+                        val foundData = foundRequirement.mapNotNull{requirement ->
+                            requirementMap.entries.firstOrNull{(keys, _) ->
+                                keys.any{ requirement.contains(it, ignoreCase = true) }
+                            }?.let{(_, value) ->
+                                "$requirement is $value"
+                            }
+                        }
+
+                        val joined = when(foundData.size){
+                            1 -> foundData[0]
+                            2 -> foundData.joinToString(" and ")
+                            else -> foundData.dropLast(1).joinToString(", ") + ", and " + foundData.last()
+                        }
+                        val requirements = when(foundRequirement.size){
+                            1 -> foundRequirement[0]
+                            2 -> foundRequirement.joinToString(" and ")
+                            else -> foundRequirement.dropLast(1).joinToString(", ") + ", and " + foundData.last()
+                        }
+
+                        val message = if(joined.isNotBlank()){
+                            "Darling, your $joined."
+                        }else{
+                            "I'm sorry, Darling… I couldn't find the $requirements."
+                        }
+
+                        messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                    }
+                }//END of IF-STATEMENT
+
+                //START of IF-STATEMENT:
+                if(list.any{it in otherKey}){
+                    val foundList = mutableListOf<String>()
+
+                    userReference.get().addOnSuccessListener{userSnapshot ->
+                        //START of FOR-LOOP:
+                        for(foundUser in userSnapshot.children){
+                            foundUsername = foundUser.child("Personal Information/username").getValue(String::class.java).toString()
+                            foundGender = foundUser.child("Personal Information/gender").getValue(String::class.java).toString()
+                            foundBirthdate = foundUser.child("Personal Information/birthdate").getValue(String::class.java).toString()
+                            foundMobile = foundUser.child("Personal Information/mobile").getValue(String::class.java).toString()
+                            foundEmail = foundUser.child("Personal Information/email").getValue(String::class.java).toString()
+
+                            foundList.addAll(listOf(foundUsername, foundGender, foundBirthdate, foundMobile, foundEmail))
+
+                            Log.d("found user", foundList.joinToString(", "))
+
+                            //START of IF-STATEMENT:
+                            if(foundList.any{it in keywords}){
+                                val requirementMap = mapOf(
+                                    listOf("username", "user", "name") to foundUsername,
+                                    listOf("birthdate", "birthday", "birth") to foundBirthdate,
+                                    listOf("gender", "sex") to foundGender,
+                                    listOf("email", "mail", "address") to foundEmail,
+                                    listOf("mobile", "phone", "number", "contact") to foundMobile
+                                )
+
+                                val foundData = foundRequirement.mapNotNull{requirement ->
+                                    requirementMap.entries.firstOrNull{(keys, _) ->
+                                        keys.any{ requirement.contains(it, ignoreCase = true) }
+                                    }?.let{(_, value) ->
+                                        "$requirement is $value"
+                                    }
+                                }
+
+                                val joined = when(foundData.size){
+                                    1 -> foundData[0]
+                                    2 -> foundData.joinToString(" and ")
+                                    else -> foundData.dropLast(1).joinToString(", ") + ", and " + foundData.last()
+                                }
+                                val requirements = when(foundRequirement.size){
+                                    1 -> foundRequirement[0]
+                                    2 -> foundRequirement.joinToString(" and ")
+                                    else -> foundRequirement.dropLast(1).joinToString(", ") + ", and " + foundData.last()
+                                }
+
+                                val message = if(joined.isNotBlank()){
+                                    "Darling, $joined."
+                                }else{
+                                    "I'm sorry, Darling… I couldn't find the $requirements."
+                                }
+
+                                messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                            }//END of IF-STATEMENT
+
+                            foundList.clear()
+                        }//END of FOR-LOOP
+                    }
+                }//END of IF-STATEMENT
             }//END of FUNCTION: onDataChange
 
             //START of FUNCTION: onCancelled
             override fun onCancelled(error: DatabaseError){
             }//END of FUNCTION: onCancelled
         })
-    }//END of FUNCTION: queryMessage
+    }//END of FUNCTION: queryUser
+
+    //START of FUNCTION: queryLog
+    private fun queryLog(userKey: String, messageKey: String, classification: String, query: String){
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+
+        val interrogative = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "do")
+        val list = query.lowercase().split(Regex("[^\\w']+")).map{it.removeSuffix("s")}.filter{it.isNotBlank()}
+        val keywords = list.filter{it !in cancel}.toSet()
+        val lastKeyword = keywords.lastOrNull() ?: ""
+        var answers = mutableListOf<String>()
+        var foundAnswer = ""
+        var message = ""
+
+        val cleaned = query
+            .replace(Regex("(?i)\\b(is|are|am|you|was|were|do|does|did|know)\\b\\s*"), "")
+            .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
+            .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
+            .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
+            .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
+            .removeSuffix("?")
+            .trim()
+
+        messageReference.addListenerForSingleValueEvent(object: ValueEventListener{
+            //START of FUNCTION: onDataChange
+            override fun onDataChange(messageSnapshot: DataSnapshot){
+                var index = 1
+                var newLogKey = "message$index"
+                var foundLogKey = "message$index"
+
+                //START of WHILE-LOOP:
+                while(messageSnapshot.hasChild(newLogKey)){
+                    index++
+                    newLogKey = "message$index"
+                }//END of WHILE-LOOP
+
+                //START of IF-STATEMENT:
+                if((query.lowercase().contains(Regex("\\bare\\b"))) || (lastKeyword.endsWith("s") && !lastKeyword.endsWith("ss"))){
+                    //START of WHILE-LOOP:
+                    while(messageSnapshot.hasChild(foundLogKey)){
+                        val foundUserKey = messageSnapshot.child("$foundLogKey/userKey").getValue(String::class.java).toString()
+
+                        //START of IF-STATEMENT:
+                        if(foundUserKey.startsWith("User")){
+                            val foundMessage = messageSnapshot.child("$foundLogKey/message").getValue(String::class.java).toString()
+                            val foundList = foundMessage.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+                            Log.d("found message", foundMessage)
+
+                            //START of IF-STATEMENT:
+                            if(!(foundList.any{it in interrogative} || foundMessage.endsWith("?"))){
+                                val normalizedKeywords = keywords.map{it.removeSuffix("s")}.toSet()
+                                val normalizedList = foundList.map{it.removeSuffix("s")}.toSet()
+                                val foundAnswer = foundList.filter{word -> word.removeSuffix("s") !in normalizedKeywords && word !in cancel}.joinToString(" ")
+
+                                //START of IF-STATEMENT:
+                                if(normalizedList.containsAll(keywords)){
+                                    Log.d("found answer", foundAnswer)
+                                    answers.add(foundAnswer)
+                                }//END of IF-STATEMENT
+                            }//END of IF-STATEMENT
+                        }//END of IF-STATEMENT
+
+                        index--
+                        foundLogKey = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if(answers.isNotEmpty()){
+                        val joined = when(answers.size){
+                            1 -> answers[0]
+                            2 -> answers.joinToString(" and ")
+                            else -> answers.dropLast(1).joinToString(", ") + ", and " + answers.last()
+                        }
+                        val pluralKeyword = if (lastKeyword.endsWith("s")) lastKeyword else lastKeyword + "s"
+                        message = "$pluralKeyword are $joined.".replaceFirstChar{it.titlecase()}
+                        messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                    }//END of IF-STATEMENT
+
+                    //START of ELSE-STATEMENT:
+                    else{
+                        //START of IF-STATEMENT:
+                        if((classification != "ai") && (classification != "user")){
+                            message = "I don't know $cleaned are Darling."
+                            messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(classification == "ai"){
+                            queryAI(messageKey, query)
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(classification == "user"){
+                            queryUser(userKey, messageKey, query)
+                        }//END of IF-STATEMENT
+                    }//END of ELSE-STATEMENT
+                }//END of IF-STATEMENT
+
+                //START of IF-STATEMENT:
+                else if(query.lowercase().matches(Regex("^(is|are|was|were|do|does|did)\\b.*", RegexOption.IGNORE_CASE))){
+                    //START of WHILE-LOOP:
+                    while(messageSnapshot.hasChild(foundLogKey)){
+                        val foundUserKey = messageSnapshot.child("$foundLogKey/userKey").getValue(String::class.java).toString()
+
+                        //START of IF-STATEMENT:
+                        if(foundUserKey.startsWith("User")){
+                            val foundMessage = messageSnapshot.child("$foundLogKey/message").getValue(String::class.java).toString()
+                            val foundList = foundMessage.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+                            Log.d("found message", foundMessage)
+
+                            //START of IF-STATEMENT:
+                            if(!(foundList.any{it in interrogative} || foundMessage.endsWith("?"))){
+                                val normalizedKeywords = keywords.map{it.removeSuffix("s")}.toSet()
+
+                                //START of IF-STATEMENT:
+                                if(foundList.map{it.removeSuffix("s")}.any {it in normalizedKeywords}){
+                                    foundAnswer = foundMessage
+                                    Log.d("found answer", foundAnswer)
+                                    answers = foundList.map{it.removeSuffix("s")}.toMutableList()
+                                    break
+                                }//END of IF-STATEMENT
+                            }//END of IF-STATEMENT
+                        }//END of IF-STATEMENT
+
+                        index--
+                        foundLogKey = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if(answers.isNotEmpty()){
+                        val replaced = cancel.fold(foundAnswer){text, word ->
+                            val pattern = Regex("\\b${Regex.escape(word)}\\b", RegexOption.IGNORE_CASE)
+                            text.replace(pattern){it.value.lowercase()}
+                        }
+                            .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
+                            .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
+                            .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
+                            .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
+
+                        //START of IF-STATEMENT:
+                        if(answers.containsAll(keywords)){
+                            message = "Yes Darling, $replaced.".replaceFirstChar{it.titlecase()}
+                        }//END of IF-STATEMENT
+
+                        //START of ELSE-STATEMENT:
+                        else{
+                            message = "No Darling, $replaced.".replaceFirstChar{it.titlecase()}
+                        }//END of IF-STATEMENT
+
+                        messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                    }//END of IF-STATEMENT
+
+                    //START of ELSE-STATEMENT:
+                    else{
+                        //START of IF-STATEMENT:
+                        if((classification != "ai") && (classification != "user")){
+                            message = "I don't know $cleaned Darling."
+                            messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(classification == "ai"){
+                            queryAI(messageKey, query)
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(classification == "user"){
+                            queryUser(userKey, messageKey, query)
+                        }//END of IF-STATEMENT
+                    }//END of ELSE-STATEMENT
+                }//END of IF-STATEMENT
+
+                //START of ELSE-STATEMENT:
+                else{
+                    //START of WHILE-LOOP:
+                    while(messageSnapshot.hasChild(foundLogKey)){
+                        val foundUserKey = messageSnapshot.child("$foundLogKey/userKey").getValue(String::class.java).toString()
+
+                        //START of IF-STATEMENT:
+                        if(foundUserKey.startsWith("User")){
+                            val foundMessage = messageSnapshot.child("$foundLogKey/message").getValue(String::class.java).toString()
+                            val foundList = foundMessage.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+                            Log.d("found message", foundMessage)
+
+                            //START of IF-STATEMENT:
+                            if(!(foundList.any{it in interrogative} || foundMessage.endsWith("?"))){
+                                val normalizedKeywords = keywords.map{it.removeSuffix("s")}.toSet()
+                                val normalizedList = foundList.map{it.removeSuffix("s")}.toSet()
+
+                                //START of IF-STATEMENT:
+                                if(normalizedList.containsAll(normalizedKeywords)){
+                                    foundAnswer = foundMessage
+                                    Log.d("found answer", foundAnswer)
+                                    break
+                                }//END of IF-STATEMENT
+                            }//END of IF-STATEMENT
+                        }//END of IF-STATEMENT
+
+                        index--
+                        foundLogKey = "message$index"
+                    }//END of WHILE-LOOP
+
+                    //START of IF-STATEMENT:
+                    if(foundAnswer.isNotBlank()){
+                        val replaced = cancel.fold(foundAnswer){text, word ->
+                            val pattern = Regex("\\b${Regex.escape(word)}\\b", RegexOption.IGNORE_CASE)
+                            text.replace(pattern){it.value.lowercase()}
+                        }
+                            .replace(Regex("\\bmy\\b", RegexOption.IGNORE_CASE), "your")
+                            .replace(Regex("\\bI'm\\b", RegexOption.IGNORE_CASE), "you are")
+                            .replace(Regex("\\bI've\\b", RegexOption.IGNORE_CASE), "you have")
+                            .replace(Regex("\\bme\\b", RegexOption.IGNORE_CASE), "you")
+
+                        message = "${replaced.replaceFirstChar{it.titlecase()}}, Darling."
+                        messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                    }//END of IF-STATEMENT
+
+                    //START of ELSE-STATEMENT:
+                    else{
+                        //START of IF-STATEMENT:
+                        if((classification != "ai") && (classification != "user")){
+                            message = "I don't know $cleaned is Darling."
+                            messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(classification == "ai"){
+                            queryAI(messageKey, query)
+                        }//END of IF-STATEMENT
+
+                        //START of IF-STATEMENT:
+                        if(classification == "user"){
+                            queryUser(userKey, messageKey, query)
+                        }//END of IF-STATEMENT
+                    }//END of ELSE-STATEMENT
+                }//END of ELSE-STATEMENT
+            }//END of FUNCTION: onDataChange
+
+            //START of FUNCTION: onCancelled
+            override fun onCancelled(error: DatabaseError){
+            }//END of FUNCTION: onCancelled
+        })
+    }//END of FUNCTION: queryLog
 }//END of CLASS: Query
