@@ -25,59 +25,55 @@ class Query{
 
     //START of FUNCTION: writeQuery
     fun writeQuery(userKey: String, messageKey: String, message: String){
-        val interrogative = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "do")
-        val auxiliary = setOf("is", "are", "am", "was", "were", "do", "does", "did", "have", "has", "had", "can", "could", "would", "should", "will", "i", "you", "he", "she", "they", "we", "it", "my", "your", "his", "her", "their", "our", "me", "him", "them", "us", "the", "a", "an", "this", "that", "these", "those", "in", "on", "at", "for", "to", "of", "with", "about")
+        val interrogative = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how")
+        val auxiliary = setOf("is", "are", "am", "was", "were", "do", "does", "did", "have", "has", "had", "can", "could", "would", "should", "will")
         val ai = setOf("you", "your", "you're")
         val userDataFields = setOf("username", "user", "name", "birthdate", "birthday", "birth", "gender", "sex", "email", "mail", "address", "mobile", "phone", "number", "contact")
-
-        val list = message.lowercase().split(Regex("[^\\w']+")).map{it.removeSuffix("s")}.filter{it.isNotBlank()}
         val queries = mutableListOf<String>()
-        val indices = list.mapIndexedNotNull{index, word ->
-            if(interrogative.contains(word) || auxiliary.contains(word))index else null
-        }
+        val segments = message.split(Regex("[?!.]+"))
+
+        //START of FOR-LOOP:
+        for(segment in segments){
+            val list = segment.lowercase().split(Regex("[^\\w']+")).map{ it.removeSuffix("s") }.filter{ it.isNotBlank() }
+
+            if(list.isEmpty())continue
+
+            val startIndex = list.indexOfFirst{
+                it in interrogative || it in auxiliary
+            }
+            val query = if(startIndex != -1){list.subList(startIndex, list.size).joinToString(" ") }else{
+                list.joinToString(" ")
+            }
+
+            //START of IF-STATEMENT:
+            if(query.isNotBlank()){
+                queries.add(query.trim())
+            }//END of IF-STATEMENT
+        }//END of FOR-LOOP
 
         //START of IF-STATEMENT:
-        if(indices.isNotEmpty()){
-            //START of FOR-LOOP:
-            for(i in indices.indices){
-                val start = indices[i]
-                val end = if (i + 1 < indices.size) indices[i + 1] else list.size
-                val query = list.subList(start, end).joinToString(" ")
-                queries.add(query.trim())
-            }//END of FOR-LOOP
+        if(queries.isEmpty()){
+            queries.add(message.lowercase().trim())
         }//END of IF-STATEMENT
 
-        //START of ELSE-STATEMENT:
-        else{
-            queries.add(list.joinToString(" ").trim())
-        }//END of ELSE-STATEMENT
-        //START of FOR-LOOP:
+        //START of FOR-LOOP
         for(query in queries){
-            val subList = query.lowercase().split(Regex("[^\\w']+")).map{it.removeSuffix("s")}.filter{it.isNotBlank()}
-            val keywords = subList.filter{it.isNotBlank() && it !in cancel}
-            val isAiQuery = keywords.any{it in ai} && keywords.any{it in userDataFields}
-            val isUserQuery = keywords.any{it in userDataFields}
-            var classification = ""
-            //START of IF-STATEMENT:
-            if(isAiQuery){
-                classification = "ai"
-            }//END of IF-STATEMENT
+            Log.d("query", query)
 
-            //START of IF-STATEMENT:
-            if(isUserQuery){
-                classification = "user"
-            }//END of IF-STATEMENT
-
-            //START of ELSE-STATEMENT:
-            if(!isAiQuery && !isUserQuery){
-                classification = "log"
-            }//END of IF-STATEMENT
+            val subList = query.split(Regex("[^\\w']+")).map{ it.removeSuffix("s") }.filter{ it.isNotBlank() }
+            val isAiQuery = subList.any{ it in ai } && subList.any{ it in userDataFields }
+            val isUserQuery = subList.any{ it in userDataFields } && !subList.any{ it in ai }
+            val classification = when{
+                isAiQuery -> "ai"
+                isUserQuery -> "user"
+                else -> "log"
+            }
 
             Log.d("classification", classification)
 
             queryLog(userKey, messageKey, classification, query)
         }//END of FOR-LOOP
-    }//END of FUNCTION: writeQuery
+    }//END of FUNCTION
 
     //START of FUNCTION: queryAI
     private fun queryAI(messageKey: String, message: String){
