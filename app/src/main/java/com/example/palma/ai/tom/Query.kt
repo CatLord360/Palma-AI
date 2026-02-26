@@ -24,54 +24,75 @@ class Query{
 
     //START of FUNCTION: writeQuery
     fun writeQuery(userKey: String, messageKey: String, message: String){
+        val messageReference = database.getReference("Palma/Message/$messageKey")
         val interrogative = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how")
         val auxiliary = setOf("is", "are", "am", "was", "were", "do", "does", "did", "have", "has", "had", "can", "could", "would", "should", "will")
         val ai = setOf("you", "your", "you're")
         val userDataFields = setOf("username", "user", "name", "birthdate", "birthday", "birth", "gender", "sex", "email", "mail", "address", "mobile", "phone", "number", "contact")
         val queries = mutableListOf<String>()
-        val segments = message.split(Regex("[?!.]+"))
+        val messages = message.lowercase().split(Regex("[?.!]+")).map{it.trim()}.filter{it.isNotEmpty()}
 
         //START of FOR-LOOP:
-        for(segment in segments){
-            val list = segment.lowercase().split(Regex("[^\\w']+")).map{ it.removeSuffix("s") }.filter{ it.isNotBlank() }
-
-            if(list.isEmpty())continue
-
-            val startIndex = list.indexOfFirst{
-                it in interrogative || it in auxiliary
+        for(foundMessage in messages){
+            val list = foundMessage.split(Regex("[^\\w']+")).filter{it.isNotBlank()}
+            val lastInterrogativeIndex = list.indexOfLast{it in interrogative}
+            val lastAuxiliaryIndex = list.indexOfLast{it in auxiliary}
+            val startIndex = when{
+                lastInterrogativeIndex != -1 -> lastInterrogativeIndex
+                lastAuxiliaryIndex != -1 -> lastAuxiliaryIndex
+                else -> -1
             }
-            val query = if(startIndex != -1){list.subList(startIndex, list.size).joinToString(" ") }else{
-                list.joinToString(" ")
+            val query = if(startIndex != -1){
+                list.subList(startIndex, list.size).joinToString(" ")
+            } else{
+                foundMessage
             }
 
-            //START of IF-STATEMENT:
-            if(query.isNotBlank()){
-                queries.add(query.trim())
-            }//END of IF-STATEMENT
+            queries.add(query)
+            Log.d("found query", query)
         }//END of FOR-LOOP
 
-        //START of IF-STATEMENT:
-        if(queries.isEmpty()){
-            queries.add(message.lowercase().trim())
-        }//END of IF-STATEMENT
+        val queriesQueue = ArrayDeque(queries)
 
-        //START of FOR-LOOP
-        for(query in queries){
-            Log.d("query", query)
+        messageReference.addValueEventListener(object : ValueEventListener{
+            var lastSize = 0L
+            var isFirst = true
 
-            val subList = query.split(Regex("[^\\w']+")).map{ it.removeSuffix("s") }.filter{ it.isNotBlank() }
-            val isAiQuery = subList.any{ it in ai } && subList.any{ it in userDataFields }
-            val isUserQuery = subList.any{ it in userDataFields } && !subList.any{ it in ai }
-            val classification = when{
-                isAiQuery -> "ai"
-                isUserQuery -> "user"
-                else -> "log"
-            }
+            //START of FUNCTION: onDataChange
+            override fun onDataChange(snapshot: DataSnapshot){
+                val currentSize = snapshot.childrenCount
 
-            Log.d("classification", classification)
+                //START of IF-STATEMENT:
+                if(isFirst || currentSize != lastSize){
+                    isFirst = false
+                    lastSize = currentSize
 
-            queryLog(userKey, messageKey, classification, query)
-        }//END of FOR-LOOP
+                    //START of WHILE-LOOP:
+                    while(queriesQueue.isNotEmpty()){
+                        val query = queriesQueue.removeFirst()
+                        Log.d("query", query)
+
+                        val subList = query.split(Regex("[^\\w']+")).map{it.removeSuffix("s")}.filter{it.isNotBlank()}
+                        val isAiQuery = subList.any{it in ai} && subList.any{it in userDataFields}
+                        val isUserQuery = subList.any{it in userDataFields} && !subList.any{it in ai}
+                        val classification = when{
+                            isAiQuery -> "ai"
+                            isUserQuery -> "user"
+                            else -> "log"
+                        }
+
+                        Log.d("classification", classification)
+                        queryLog(userKey, messageKey, classification, query)
+
+                        break
+                    }//END of WHILE-LOOP
+                }//END of IF-STATEMENT
+            }//END of FUNCTION: onDataChange
+
+            //START of FUNCTION: onCancelled:
+            override fun onCancelled(error: DatabaseError){
+            }//END of FUNCTION: onCancelled
+        })
     }//END of FUNCTION
 
     //START of FUNCTION: queryAI
