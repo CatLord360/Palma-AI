@@ -563,6 +563,7 @@ class MessageActivity : AppCompatActivity() {
                     }//END of WHILE-LOOP
 
                     messageReference.child(key).setValue(Message(userKey, date, time, message))
+                    binding.InputMessage.text.clear();
 
                     //START of IF-STATEMENT:
                     if(type == "ai"){
