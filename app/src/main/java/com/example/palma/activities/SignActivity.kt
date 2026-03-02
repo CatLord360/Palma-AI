@@ -123,12 +123,17 @@ class SignActivity : AppCompatActivity() {
                 Rin().writeRin(userKey, username).await()
                 Pinky().writePinky(userKey, username).await()
 
-                val toast = Toast.makeText(this@SignActivity, "Signed In Successfully", Toast.LENGTH_SHORT)
-                val intent = Intent(this@SignActivity, MessageActivity::class.java)
-                intent.putExtra("userKey", userKey)
-                intent.putExtra("contactKey", "Contact - 1")
-                toast.show()
-                startActivity(intent)
+                val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+
+                userReference.get().addOnSuccessListener{ userSnapshot ->
+                    val username = userSnapshot.child("username").getValue(String::class.java)
+                    val toast = Toast.makeText(this@SignActivity, "Welcome $username", Toast.LENGTH_SHORT)
+                    val intent = Intent(this@SignActivity, MessageActivity::class.java)
+                    intent.putExtra("userKey", userKey)
+                    intent.putExtra("contactKey", "Contact - 1")
+                    toast.show()
+                    startActivity(intent)
+                }
             }//END of TRY
 
             //START of CATCH:

@@ -74,6 +74,7 @@ class LogActivity : AppCompatActivity() {
 
                         //START of IF-STATEMENT:
                         if(userKey != null){
+                            val userReference = database.getReference("Palma/User/$userKey/Personal Information")
                             val contactReference = database.getReference("Palma/User/$userKey/Contact")
 
                             contactReference.get().addOnSuccessListener { contactSnapshot ->
@@ -85,12 +86,15 @@ class LogActivity : AppCompatActivity() {
                                     contactKey = first.key
                                 }//END of IF-STATEMENT
 
-                                val toast = Toast.makeText(this@LogActivity, "Logged In Successfully", Toast.LENGTH_SHORT)
-                                val intent = Intent(this@LogActivity, MessageActivity::class.java)
-                                intent.putExtra("userKey", userKey)
-                                intent.putExtra("contactKey", contactKey)
-                                toast.show()
-                                startActivity(intent)
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    val username = userSnapshot.child("username").getValue(String::class.java)
+                                    val toast = Toast.makeText(this@LogActivity, "Welcome back $username", Toast.LENGTH_SHORT)
+                                    val intent = Intent(this@LogActivity, MessageActivity::class.java)
+                                    intent.putExtra("userKey", userKey)
+                                    intent.putExtra("contactKey", contactKey)
+                                    toast.show()
+                                    startActivity(intent)
+                                }
                             }
                         }//END of IF-STATEMENT
 
