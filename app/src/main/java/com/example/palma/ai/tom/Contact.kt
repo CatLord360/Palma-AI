@@ -152,6 +152,9 @@ class Contact{
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val contactReference = database.getReference("Palma/User/$userKey/Contact")
         val messageReference = database.getReference("Palma/Message")
+        val current = LocalDateTime.now()
+        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
+        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         val list = message.trim().split(" ")
         val email = list[3].trim()
 
@@ -193,6 +196,7 @@ class Contact{
                                 }//END of WHILE-LOOP
 
                                 foundContactReference.child(foundContactKey).setValue(Contact(foundMessageKey, user?.username.toString(), user?.mobile.toString(), user?.email.toString(), "user"))
+                                messageReference.child("$foundMessageKey/message1").setValue(Message(aiKey, date, time, "${user?.username.toString()} would like to have a word"))
 
                                 contactReference.get().addOnSuccessListener{ contactSnapshot ->
                                     contactIndex = 1
