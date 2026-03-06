@@ -1,5 +1,6 @@
 package com.example.palma.ai.palma
 
+import android.util.Log
 import com.example.palma.models.Item
 import com.example.palma.models.List
 import com.example.palma.models.Message
@@ -156,13 +157,14 @@ class List{
 
                             val contactString = "$username $type $mobile $email"
                             contactList.add(contactString)
+                            Log.d("found contact", username)
                         }//END of FOR-LOOP
 
                         var index = 1
                         var key = "message$index"
 
                         //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
+                        while(messageSnapshot.hasChild(key)){
                             index++
                             key = "message$index"
                         }//END of WHILE-LOOP
@@ -175,7 +177,7 @@ class List{
 
                             val message = Message(aiKey, date, time, contactInfo)
                             messageReference.child(key).setValue(message)
-                            index++
+                            key = "message${index++}"
                         }//END of FOR-LOOP
 
                         success(userKey, messageKey, "contact", "contact", "")
@@ -223,21 +225,25 @@ class List{
 
                                 //START of IF-STATEMENT:
                                 if(reminder.child("type").getValue(String::class.java) == "daily"){
+                                    Log.d("found reminder", "${reminder.child("type").getValue(String::class.java)} reminder for ${reminder.child("reminder").getValue(String::class.java)}")
                                     messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: everyday"))
                                 }//END of IF-STATEMENT
 
                                 //START of IF-STATEMENT:
                                 if(reminder.child("type").getValue(String::class.java) == "weekly"){
+                                    Log.d("found reminder", "${reminder.child("type").getValue(String::class.java)} reminder for ${reminder.child("reminder").getValue(String::class.java)}")
                                     messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: every ${reminder.child("day").getValue(String::class.java)}"))
                                 }//END of IF-STATEMENT
 
                                 //START of IF-STATEMENT:
                                 if(reminder.child("type").getValue(String::class.java) == "monthly"){
+                                    Log.d("found reminder", "${reminder.child("type").getValue(String::class.java)} reminder for ${reminder.child("reminder").getValue(String::class.java)}")
                                     messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: ${reminder.child("date").getValue(String::class.java)} of the month"))
                                 }//END of IF-STATEMENT
 
                                 //START of IF-STATEMENT:
                                 if(reminder.child("type").getValue(String::class.java) == "annually"){
+                                    Log.d("found reminder", "${reminder.child("type").getValue(String::class.java)} reminder for ${reminder.child("reminder").getValue(String::class.java)}")
                                     messageReference.child("message$index").setValue(Message(aiKey, date, time, "date: ${reminder.child("date").getValue(String::class.java)} of the year"))
                                 }//END of IF-STATEMENT
                                 index = index + 1
@@ -252,6 +258,7 @@ class List{
 
                     //START of ELSE-STATEMENT:
                     else{
+                        Log.e("reminder", "reminder does not exist")
                         error(userKey, messageKey, "reminder")
                     }//END of ELSE-STATEMENT
                 }//END of FUNCTION: onDataChange
@@ -301,6 +308,7 @@ class List{
                                             val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
                                             val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
 
+                                            Log.d("found item", "${item.child("item").getValue(String::class.java)}")
                                             messageReference.child("message$index").setValue(Message(aiKey, date, time, item.child("item").getValue(String::class.java)))
                                             index = index + 1
                                         }//END of FOR-LOOP
@@ -310,6 +318,7 @@ class List{
 
                                     //START of ELSE-STATEMENT:
                                     else{
+                                        Log.e("list", "incorrect user")
                                         error(userKey, messageKey, "userKey")
                                     }//END of ELSE-STATEMENT
 
@@ -328,6 +337,7 @@ class List{
 
                     //START of ELSE-STATEMENT:
                     else{
+                        Log.e("list", "list does not exist")
                         error(userKey, messageKey, "list")
                     }//END of ELSE-STATEMENT
                 }//END of FUNCTION: onDataChange

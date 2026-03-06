@@ -1,5 +1,6 @@
 package com.example.palma.ai.pinky
 
+import android.util.Log
 import com.example.palma.models.Message
 import com.example.palma.models.User
 import com.google.firebase.Firebase
@@ -101,13 +102,14 @@ class List{
 
                             val contactString = "$username $type $mobile $email"
                             contactList.add(contactString)
+                            Log.d("found contact", username)
                         }//END of FOR-LOOP
 
                         var index = 1
                         var key = "message$index"
 
                         //START of WHILE-LOOP:
-                        while(snapshot.hasChild(key)){
+                        while(messageSnapshot.hasChild(key)){
                             index++
                             key = "message$index"
                         }//END of WHILE-LOOP
@@ -120,7 +122,7 @@ class List{
 
                             val message = Message(aiKey, date, time, contactInfo)
                             messageReference.child(key).setValue(message)
-                            index++
+                            key = "message${index++}"
                         }//END of FOR-LOOP
 
                         success(userKey, messageKey, "contact", "contact")
