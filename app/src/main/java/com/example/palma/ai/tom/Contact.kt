@@ -618,18 +618,16 @@ class Contact{
     //START of FUNCTION: addUser
     private fun addUser(userKey: String, messageKey: String, message: String){
         val contactReference = database.getReference("Palma/User/$userKey/Contact")
-        val messageReference = database.getReference("Palma/Message/$messageKey")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         val list = message.trim().split(" ")
         val add = list[3].trim()
+        var addUsername = ""
 
         database.getReference("Palma/User").get().addOnSuccessListener{ snapshot ->
             //START of FOR-LOOP:
             for(child in snapshot.children){
                 val personal = child.child("Personal Information")
                 val foundEmail = personal.child("email").getValue(String::class.java)
+                addUsername = personal.child("username").getValue(String::class.java).toString()
 
                 //START of IF-STATEMENT:
                 if(add == foundEmail){
@@ -701,27 +699,6 @@ class Contact{
                                                                 val newContactKey = newContact.key
 
                                                                 database.getReference("Palma/User/$memberKey/Contact/$newContactKey/Member/$newMemberKey").setValue(Member(personal.child("username").getValue(String::class.java).toString(), personal.child("mobile").getValue(String::class.java).toString(), personal.child("email").getValue(String::class.java).toString(), "user"))
-
-                                                                messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                                                    //START of FUNCTION: onDataChange
-                                                                    override fun onDataChange(snapshot: DataSnapshot) {
-                                                                        var index = 1
-                                                                        var key = "message$index"
-
-                                                                        //START of WHILE-LOOP:
-                                                                        while(snapshot.hasChild(key)){
-                                                                            index++
-                                                                            key = "message$index"
-                                                                        }//END of WHILE-LOOP
-
-                                                                        val message = Message(aiKey, date, time, "I have successfully added ${personal.child("username").getValue(String::class.java).toString()} to ${contact.child("username").getValue(String::class.java).toString()}...")
-                                                                        messageReference.child(key).setValue(message)
-                                                                    }//END of FUNCTION: onDataChange
-
-                                                                    //START of FUNCTION: onCancelled
-                                                                    override fun onCancelled(error: DatabaseError){
-                                                                    }//END of FUNCTION: onCancelled
-                                                                })
                                                             }//END of IF-STATEMENT
                                                         }//END of FOR-LOOP
                                                     }
@@ -741,6 +718,8 @@ class Contact{
                     break
                 }//END of IF-STATEMENT
             }//END of FOR-LOOP
+
+            success(userKey, "add", messageKey, addUsername)
         }
     }//END of FUNCTION: addUser
 
@@ -846,99 +825,86 @@ class Contact{
 
     //START of FUNCTION: removeUser
     private fun removeUser(userKey: String, messageKey: String, message: String){
+        val userReference = database.getReference("Palma/User")
         val contactReference = database.getReference("Palma/User/$userKey/Contact")
-        val messageReference = database.getReference("Palma/Message/$messageKey")
-        val current = LocalDateTime.now()
-        val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
-        val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
         val list = message.trim().split(" ")
         val remove = list[3].trim()
+        var removeUsername = ""
 
-        contactReference.get().addOnSuccessListener{ snapshot ->
+        contactReference.get().addOnSuccessListener{ contactSnapshot ->
             //START of FOR-LOOP:
-            for(child in snapshot.children){
-                val foundMessageKey = child.child("messageKey").getValue(String::class.java)
-                val foundType = child.child("group").getValue(String::class.java)
+            for(contact in contactSnapshot.children){
+                val foundMessageKey = contact.child("messageKey").getValue(String::class.java)
+                val foundType = contact.child("type").getValue(String::class.java)
+                Log.d("found contact", contact.child("username").getValue(String::class.java).toString())
 
                 //START of IF-STATEMENT:
-                if(foundType == "group"){
-                    //START of IF-STATEMENT:
-                    if(messageKey == foundMessageKey){
-                        database.getReference("Palma/User/$userKey/Contact/${child.key}/Member").get().addOnSuccessListener{ memberSnapshot ->
-                            //START of FOR-LOOP:
-                            for(member in memberSnapshot.children){
-                                val type = member.child("type").getValue(String::class.java)
-                                val email = member.child("email").getValue(String::class.java)
+                if((foundType == "group") && (foundMessageKey == messageKey)){
+                    Log.d("found group", contact.child("username").getValue(String::class.java).toString())
 
-                                //START of IF-STATEMENT:
-                                if(type == "user"){
-                                    database.getReference("Palma/User").get().addOnSuccessListener{ userSnapshot ->
-                                        //START of FOR-LOOP:
-                                        for(user in userSnapshot.children){
-                                            val personal = user.child("Personal Information")
-                                            val foundEmail = personal.child("email").getValue(String::class.java)?.trim()
+                    contactReference.child("${contact.key}/Member").get().addOnSuccessListener{ memberSnapshot ->
+                        //START of FOR-LOOP:
+                        for(member in memberSnapshot.children){
+                            val memberUsername = member.child("username").getValue(String::class.java).toString()
+                            val memberEmail = member.child("email").getValue(String::class.java).toString()
+                            val memberType = member.child("type").getValue(String::class.java).toString()
+                            Log.d("found member", memberUsername)
 
-                                            //START of IF-STATEMENT:
-                                            if(email == foundEmail){
-                                                val foundUserKey = user.key
+                            //START of IF-STATEMENT:
+                            if(memberType == "user"){
+                                userReference.get().addOnSuccessListener{ userSnapshot ->
+                                    //START of FOR-LOOP:
+                                    for(foundUser in userSnapshot.children){
+                                        val foundUsername = foundUser.child("Personal Information/username").getValue(String::class.java).toString()
+                                        val foundEmail = foundUser.child("Personal Information/email").getValue(String::class.java).toString()
 
-                                                database.getReference("Palma/User/$foundUserKey/Contact").get().addOnSuccessListener{ contactSnapshot ->
-                                                    //START of FOR-LOOP:
-                                                    for(contact in contactSnapshot.children){
-                                                        val foundMessage = contact.child("messageKey").getValue(String::class.java)
+                                        //START of IF-STATEMENT:
+                                        if(foundEmail == memberEmail){
+                                            Log.d("found user", foundUsername)
 
-                                                        //START of IF-STATEMENT:
-                                                        if(messageKey == foundMessage) {
-                                                            val foundContactKey = contact.key.toString()
-                                                            val group = contact.child("username").getValue(String::class.java)
+                                            database.getReference("Palma/User/${foundUser.key}/Contact").get().addOnSuccessListener{ foundSnapshot ->
+                                                //START of FOR-LOOP:
+                                                for(foundContact in foundSnapshot.children){
+                                                    val foundKey = foundContact.child("messageKey").getValue(String::class.java).toString()
 
-                                                            database.getReference("Palma/User/$foundUserKey/Contact/$foundContactKey/Member").get().addOnSuccessListener{ snapshot ->
-                                                                //START of FOR-LOOP:
-                                                                for(child in snapshot.children){
-                                                                    //START of IF-STATEMENT
-                                                                    if(remove == child.child("email").getValue(String::class.java) && child.child("type").getValue(String::class.java) == "user"){
-                                                                        database.getReference("Palma/User/$foundUserKey/Contact/$foundContactKey/Member/${child.key}").removeValue()
+                                                    //START of IF-STATEMENT:
+                                                    if(foundKey == foundMessageKey){
+                                                        database.getReference("Palma/User/${foundUser.key}/Contact/${foundContact.key}/Member").get().addOnSuccessListener{ removeSnapshot ->
+                                                            //START of FOR-LOOP:
+                                                            for(found in removeSnapshot.children){
+                                                                val email = found.child("email").getValue(String::class.java).toString()
+                                                                val username = found.child("username").getValue(String::class.java).toString()
 
-                                                                        //START of IF-STATEMENT:
-                                                                        if(remove == foundEmail){
-                                                                            database.getReference("Palma/User/$foundUserKey/Contact/$foundContactKey").removeValue()
+                                                                //START of IF-STATEMENT:
+                                                                if(email == remove){
+                                                                    database.getReference("Palma/User/${foundUser.key}/Contact/${foundContact.key}/Member/${found.key}").removeValue()
+                                                                    Log.d("remove user", username)
 
-                                                                            messageReference.addListenerForSingleValueEvent(object : ValueEventListener {
-                                                                                //START of FUNCTION: onDataChange
-                                                                                override fun onDataChange(snapshot: DataSnapshot) {
-                                                                                    var index = 1
-                                                                                    var key = "message$index"
-
-                                                                                    //START of WHILE-LOOP:
-                                                                                    while(snapshot.hasChild(key)){
-                                                                                        index++
-                                                                                        key = "message$index"
-                                                                                    }//END of WHILE-LOOP
-
-                                                                                    val message = Message(aiKey, date, time, "I have successfully removed ${personal.child("username").getValue(String::class.java)} from $group...")
-                                                                                    messageReference.child(key).setValue(message)
-                                                                                }//END of FUNCTION: onDataChange
-
-                                                                                //START of FUNCTION: onCancelled
-                                                                                override fun onCancelled(error: DatabaseError){
-                                                                                }//END of FUNCTION: onCancelled
-                                                                            })
-
-                                                                            break
-                                                                        }//END of IF-STATEMENT
+                                                                    //START of IF-STATEMENT:
+                                                                    if(memberEmail == remove){
+                                                                        removeUsername = username
+                                                                        database.getReference("Palma/User/${foundUser.key}/Contact/${foundContact.key}").removeValue()
                                                                     }//END of IF-STATEMENT
-                                                                }//END of FOR-LOOP
-                                                            }
+
+                                                                    break
+                                                                }//END of IF-STATEMENT
+                                                            }//END of FOR-LOOP
                                                         }
-                                                    }//END of FOR-LOOP
-                                                }
-                                            }//END of IF-STATEMENT
-                                        }//END of FOR-LOOP
-                                    }
-                                }//END of IF-STATEMENT
-                            }//END of FOR-LOOP
+                                                    }//END of IF-STATEMENT
+                                                }//END of FOR-LOOP
+                                            }
+
+                                            break
+                                        }//END of IF-STATEMENT
+                                    }//END of FOR-LOOP
+                                }
+                            }//END of IF-STATEMENT
                         }
-                    }//END of IF-STATEMENT
+
+                        success(userKey, "remove", messageKey, removeUsername)
+                    }
+
+                    break
                 }//END of IF-STATEMENT
             }//END of FOR-LOOP
         }
