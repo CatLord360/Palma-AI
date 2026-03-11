@@ -1,5 +1,6 @@
 package com.example.palma.ai.rin
 
+import android.util.Log
 import com.example.palma.models.Annually
 import com.example.palma.models.Daily
 import com.example.palma.models.Message
@@ -19,6 +20,8 @@ import java.time.format.DateTimeParseException
 class Reminder{
     private val database = Firebase.database
     private val aiKey = "AI - 5"
+    private val listExecute = arrayOf("Palma", "Tom")
+    private var terminate = false
 
     //START of FUNCTION: writeReminder
     fun writeReminder(userKey: String, messageKey: String, message: String){
@@ -118,82 +121,82 @@ class Reminder{
 
         contactReference.get().addOnSuccessListener{ contactSnapshot ->
             //START of FOR-LOOP:
-            for(child in contactSnapshot.children){
-                val foundMessage = child.child("messageKey").getValue(String::class.java)
-
+            for(contact in contactSnapshot.children){
                 //START of IF-STATEMENT:
-                if(messageKey == foundMessage){
-                    val contactKey = child.key
-
-                    database.getReference("Palma/User/$userKey/Contact/$contactKey/Member").get()
-                        .addOnSuccessListener { memberSnapshot ->
-                            var cancel = "false"
-
+                if(contact.child("messageKey").getValue(String::class.java) == messageKey){
+                    //START of IF-STATEMENT:
+                    if(contact.child("type").getValue(String::class.java) == "group"){
+                        contactReference.child("${contact.key}/Member").get().addOnSuccessListener{ memberSnapshot ->
                             //START of FOR-LOOP:
                             for(member in memberSnapshot.children){
-                                val username = member.child("username").getValue(String::class.java)
-
                                 //START of IF-STATEMENT:
-                                if(username == "Palma"){
-                                    cancel = "true"
+                                if((listExecute.contains(member.child("username").getValue(String::class.java))) && (member.child("type").getValue(String::class.java) == "ai")){
+                                    terminate = true
+                                    Log.d("terminate", "true")
+
                                     break
                                 }//END of IF-STATEMENT
                             }//END of FOR-LOOP
+                        }
+                    }//END of IF-STATEMENT
 
-                            //START of IF-STATEMENT:
-                            if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ userSnapshot ->
-                                    reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
-                                        val type = list[2]
-                                        var index = 1
-                                        var reminderKey = "Reminder - $index"
+                    //START of IF-STATEMENT:
+                    if(contact.child("type").getValue(String::class.java) == "ai"){
+                        break
+                    }//END of IF-STATEMENT
+                }//END of IF-STATEMENT
+            }//END of FOR-LOOP
+        }
 
-                                        //START of WHILE-LOOP:
-                                        while(reminderSnapshot.hasChild(reminderKey)){
-                                            index++
-                                            reminderKey = "Reminder - $index"
-                                        }//END of WHILE-LOOP
+        //START of IF-STATEMENT:
+        if(!terminate){
+            Log.d("terminate", "false")
+            contactReference.get().addOnSuccessListener{ contactSnapshot ->
+                //START of FOR-LOOP:
+                for(child in contactSnapshot.children){
+                    val foundMessage = child.child("messageKey").getValue(String::class.java)
 
-                                        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-                                        var validTime = true
+                    //START of IF-STATEMENT:
+                    if(messageKey == foundMessage){
+                        val contactKey = child.key
 
-                                        //START of IF-STATEMENT:
-                                        if(type in types){
+                        database.getReference("Palma/User/$userKey/Contact/$contactKey/Member").get()
+                            .addOnSuccessListener { memberSnapshot ->
+                                var cancel = "false"
+
+                                //START of FOR-LOOP:
+                                for(member in memberSnapshot.children){
+                                    val username = member.child("username").getValue(String::class.java)
+
+                                    //START of IF-STATEMENT:
+                                    if(username == "Palma"){
+                                        cancel = "true"
+                                        break
+                                    }//END of IF-STATEMENT
+                                }//END of FOR-LOOP
+
+                                //START of IF-STATEMENT:
+                                if(cancel == "false"){
+                                    userReference.get().addOnSuccessListener{ userSnapshot ->
+                                        reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
+                                            val type = list[2]
+                                            var index = 1
+                                            var reminderKey = "Reminder - $index"
+
+                                            //START of WHILE-LOOP:
+                                            while(reminderSnapshot.hasChild(reminderKey)){
+                                                index++
+                                                reminderKey = "Reminder - $index"
+                                            }//END of WHILE-LOOP
+
+                                            val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+                                            var validTime = true
+
                                             //START of IF-STATEMENT:
-                                            if(types[0] == type){
-                                                val time = list[3]
-
-                                                //START of TRY-STATEMENT:
-                                                try{
-                                                    LocalTime.parse(time, timeFormatter)
-                                                }//END of TRY-STATEMENT
-
-                                                //START of CATCH-STATEMENT:
-                                                catch (e: DateTimeParseException){
-                                                    validTime = false
-                                                }//END of CATCH-STATEMENT
-
+                                            if(type in types){
                                                 //START of IF-STATEMENT:
-                                                if(validTime){
-                                                    val reminder = list.subList(4, list.size).joinToString(" ")
-
-                                                    reminderReference.child(reminderKey).setValue(Daily(userKey, type, time, reminder))
-                                                    success(userKey, "set", messageKey, type, reminder)
-                                                }//END of IF-STATEMENT
-
-                                                //START of ELSE-STATEMENT:
-                                                else{
-                                                    error(userKey, "time", messageKey, message)
-                                                }//END of ELSE-STATEMENT
-                                            }//END of IF-STATEMENT
-
-                                            //START of IF-STATEMENT:
-                                            if(types[1] == type){
-                                                val day = list[3]
-
-                                                //START of IF-STATEMENT:
-                                                if(day in days){
-                                                    val time = list[4]
+                                                if(types[0] == type){
+                                                    val time = list[3]
 
                                                     //START of TRY-STATEMENT:
                                                     try{
@@ -207,9 +210,9 @@ class Reminder{
 
                                                     //START of IF-STATEMENT:
                                                     if(validTime){
-                                                        val reminder = list.subList(5, list.size).joinToString(" ")
+                                                        val reminder = list.subList(4, list.size).joinToString(" ")
 
-                                                        reminderReference.child(reminderKey).setValue(Weekly(userKey, type, day, time, reminder))
+                                                        reminderReference.child(reminderKey).setValue(Daily(userKey, type, time, reminder))
                                                         success(userKey, "set", messageKey, type, reminder)
                                                     }//END of IF-STATEMENT
 
@@ -219,62 +222,12 @@ class Reminder{
                                                     }//END of ELSE-STATEMENT
                                                 }//END of IF-STATEMENT
 
-                                                //START of ELSE-STATEMENT:
-                                                else{
-                                                    error(userKey, "day", messageKey, message)
-                                                }//END of ELSE-STATEMENT
-                                            }//END of IF-STATEMENT
-
-                                            //START of IF-STATEMENT:
-                                            if(types[2] == type){
-                                                val date = list[3]
-
                                                 //START of IF-STATEMENT:
-                                                if(date.toIntOrNull() in 1..31){
-                                                    val time = list[4]
-
-                                                    //START of TRY-STATEMENT:
-                                                    try{
-                                                        LocalTime.parse(time, timeFormatter)
-                                                    }//END of TRY-STATEMENT
-
-                                                    //START of CATCH-STATEMENT:
-                                                    catch (e: DateTimeParseException){
-                                                        validTime = false
-                                                    }//END of CATCH-STATEMENT
+                                                if(types[1] == type){
+                                                    val day = list[3]
 
                                                     //START of IF-STATEMENT:
-                                                    if(validTime){
-                                                        val reminder = list.subList(5, list.size).joinToString(" ")
-
-                                                        reminderReference.child(reminderKey).setValue(Monthly(userKey, type, date, time, reminder))
-                                                        success(userKey, "set", messageKey, type, reminder)
-                                                    }//END of IF-STATEMENT
-
-                                                    //START of ELSE-STATEMENT:
-                                                    else{
-                                                        error(userKey, "time", messageKey, message)
-                                                    }//END of ELSE-STATEMENT
-                                                }//END of IF-STATEMENT
-
-                                                //START of ELSE-STATEMENT:
-                                                else{
-                                                    error(userKey, "date", messageKey, message)
-                                                }//END of ELSE-STATEMENT
-                                            }//END of IF-STATEMENT
-
-                                            //START of IF-STATEMENT:
-                                            if(types[3] == type){
-                                                val date = list[3]
-                                                val parts = date.split("-")
-
-                                                //START of IF-STATEMENT:
-                                                if(parts.size == 2){
-                                                    val month = parts[0].toIntOrNull()
-                                                    val day = parts[1].toIntOrNull()
-
-                                                    //START of IF-STATEMENT:
-                                                    if((month != null && month in 1..12) && (day != null && day in 1..31)){
+                                                    if(day in days){
                                                         val time = list[4]
 
                                                         //START of TRY-STATEMENT:
@@ -291,166 +244,8 @@ class Reminder{
                                                         if(validTime){
                                                             val reminder = list.subList(5, list.size).joinToString(" ")
 
-                                                            reminderReference.child(reminderKey).setValue(Annually(userKey, type, date, time, reminder))
+                                                            reminderReference.child(reminderKey).setValue(Weekly(userKey, type, day, time, reminder))
                                                             success(userKey, "set", messageKey, type, reminder)
-                                                        }//END of IF-STATEMENT
-
-                                                        //START of ELSE-STATEMENT:
-                                                        else{
-                                                            error(userKey, "time", messageKey, message)
-                                                        }//END of ELSE-STATEMENT
-                                                    }//END of IF-STATEMENT
-
-                                                    //START of ELSE-STATEMENT:
-                                                    else{
-                                                        error(userKey, "date", messageKey, message)
-                                                    }//END of ELSE-STATEMENT
-                                                }//END of IF-STATEMENT
-
-                                                //START of ELSE-STATEMENT:
-                                                else{
-                                                    error(userKey, "date", messageKey, message)
-                                                }//END of ELSE-STATEMENT
-                                            }//END of IF-STATEMENT
-                                        }//END of IF-STATEMENT
-
-                                        //START of ELSE-STATEMENT:
-                                        else{
-                                            error(userKey, "type", messageKey, message)
-                                        }//END of ELSE-STATEMENT
-                                    }
-                                }
-                            }//END of IF-STATEMENT
-                        }
-                }//END of IF-STATEMENT
-            }//END of FOR-LOOP
-        }
-
-    }//END of FUNCTION: setReminder
-
-    //START of FUNCTION: removeReminder
-    private fun removeReminder(userKey: String, messageKey: String, message: String){
-        val contactReference = database.getReference("Palma/User/$userKey/Contact")
-        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
-        val messageReference = database.getReference("Palma/Message/$messageKey")
-        val reminderReference = messageReference.child("Reminder")
-        val list = message.lowercase().trim().split(" ")
-        val types = arrayOf("daily", "weekly", "monthly", "annually")
-        val days = arrayOf("sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-        var validTime = true
-        var found = false
-
-        contactReference.get().addOnSuccessListener{ snapshot ->
-            //START of FOR-LOOP:
-            for(child in snapshot.children){
-                val foundMessage = child.child("messageKey").getValue(String::class.java)
-
-                //START of IF-STATEMENT:
-                if(messageKey == foundMessage){
-                    val contactKey = child.key
-
-                    database.getReference("Palma/User/$userKey/Contact/$contactKey/Member").get()
-                        .addOnSuccessListener { memberSnapshot ->
-                            var cancel = "false"
-
-                            //START of FOR-LOOP:
-                            for(member in memberSnapshot.children){
-                                val username = member.child("username").getValue(String::class.java)
-
-                                //START of IF-STATEMENT:
-                                if(username == "Palma"){
-                                    cancel = "true"
-                                    break
-                                }//END of IF-STATEMENT
-                            }//END of FOR-LOOP
-
-                            //START of IF-STATEMENT:
-                            if(cancel == "false"){
-                                userReference.get().addOnSuccessListener{ userSnapshot ->
-                                    reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
-                                        val type = list[2]
-
-                                        //START of FOR-LOOP:
-                                        for(rem in reminderSnapshot.children){
-                                            //START of IF-STATEMENT:
-                                            if(type in types){
-                                                //START of IF-STATEMENT:
-                                                if((types[0] == type) && (type == rem.child("type").getValue(String::class.java))){
-                                                    val time = list[3]
-
-                                                    //START of TRY-STATEMENT:
-                                                    try{
-                                                        LocalTime.parse(time, timeFormatter)
-                                                    }//END of TRY-STATEMENT
-
-                                                    //START of CATCH-STATEMENT:
-                                                    catch (e: DateTimeParseException){
-                                                        validTime = false
-                                                    }//END of CATCH-STATEMENT
-
-                                                    //START of IF-STATEMENT:
-                                                    if((validTime) && (time == rem.child("time").getValue(String::class.java))){
-                                                        val reminder = list.subList(4, list.size).joinToString(" ")
-
-                                                        //START of IF-STATEMENT:
-                                                        if(reminder == rem.child("reminder").getValue(String::class.java)){
-                                                            //START of IF-STATEMENT:
-                                                            if(userKey == rem.child("userKey").getValue(String::class.java)){
-                                                                reminderReference.child(rem.key.toString()).removeValue()
-                                                                success(userKey, "remove", messageKey, message, type)
-                                                                found = true
-                                                            }//END of IF-STATEMENT
-
-                                                            //START of ELSE-STATEMENT:
-                                                            else{
-                                                                error(userKey, "userKey", messageKey, message)
-                                                            }//END of ELSE-STATEMENT
-                                                        }//END of IF-STATEMENT
-                                                    }//END of IF-STATEMENT
-
-                                                    //START of ELSE-STATEMENT:
-                                                    else{
-                                                        error(userKey, "time", messageKey, message)
-                                                    }//END of ELSE-STATEMENT
-                                                }//END of IF-STATEMENT
-
-                                                //START of IF-STATEMENT:
-                                                if((types[1] == type) && (type == rem.child("type").getValue(String::class.java))){
-                                                    val day = list[3]
-
-                                                    //START of IF-STATEMENT:
-                                                    if((day in days) && (day == rem.child("day").getValue(String::class.java))){
-                                                        val time = list[4]
-
-                                                        //START of TRY-STATEMENT:
-                                                        try{
-                                                            LocalTime.parse(time, timeFormatter)
-                                                        }//END of TRY-STATEMENT
-
-                                                        //START of CATCH-STATEMENT:
-                                                        catch (e: DateTimeParseException){
-                                                            validTime = false
-                                                        }//END of CATCH-STATEMENT
-
-                                                        //START of IF-STATEMENT:
-                                                        if((validTime) && (time == rem.child("time").getValue(String::class.java))){
-                                                            val reminder = list.subList(5, list.size).joinToString(" ")
-
-                                                            //START of IF-STATEMENT:
-                                                            if(reminder == rem.child("reminder").getValue(String::class.java)){
-                                                                //START of IF-STATEMENT:
-                                                                if(userKey == rem.child("userKey").getValue(String::class.java)){
-                                                                    reminderReference.child(rem.key.toString()).removeValue()
-                                                                    success(userKey, "remove", messageKey, message, type)
-                                                                    found = true
-                                                                }//END of IF-STATEMENT
-
-                                                                //START of ELSE-STATEMENT:
-                                                                else{
-                                                                    error(userKey, "userKey", messageKey, message)
-                                                                }//END of ELSE-STATEMENT
-                                                            }//END of IF-STATEMENT
                                                         }//END of IF-STATEMENT
 
                                                         //START of ELSE-STATEMENT:
@@ -466,11 +261,11 @@ class Reminder{
                                                 }//END of IF-STATEMENT
 
                                                 //START of IF-STATEMENT:
-                                                if((types[2] == type) && (type == rem.child("type").getValue(String::class.java))){
+                                                if(types[2] == type){
                                                     val date = list[3]
 
                                                     //START of IF-STATEMENT:
-                                                    if((date.toIntOrNull() in 1..31) && (date == rem.child("date").getValue(String::class.java))){
+                                                    if(date.toIntOrNull() in 1..31){
                                                         val time = list[4]
 
                                                         //START of TRY-STATEMENT:
@@ -484,23 +279,11 @@ class Reminder{
                                                         }//END of CATCH-STATEMENT
 
                                                         //START of IF-STATEMENT:
-                                                        if((validTime) && (time == rem.child("time").getValue(String::class.java))){
+                                                        if(validTime){
                                                             val reminder = list.subList(5, list.size).joinToString(" ")
 
-                                                            //START of IF-STATEMENT:
-                                                            if(reminder == rem.child("reminder").getValue(String::class.java)){
-                                                                //START of IF-STATEMENT:
-                                                                if(userKey == rem.child("userKey").getValue(String::class.java)){
-                                                                    reminderReference.child(rem.key.toString()).removeValue()
-                                                                    success(userKey, "remove", messageKey, message, type)
-                                                                    found = true
-                                                                }//END of IF-STATEMENT
-
-                                                                //START of ELSE-STATEMENT:
-                                                                else{
-                                                                    error(userKey, "userKey", messageKey, message)
-                                                                }//END of ELSE-STATEMENT
-                                                            }//END of IF-STATEMENT
+                                                            reminderReference.child(reminderKey).setValue(Monthly(userKey, type, date, time, reminder))
+                                                            success(userKey, "set", messageKey, type, reminder)
                                                         }//END of IF-STATEMENT
 
                                                         //START of ELSE-STATEMENT:
@@ -508,10 +291,15 @@ class Reminder{
                                                             error(userKey, "time", messageKey, message)
                                                         }//END of ELSE-STATEMENT
                                                     }//END of IF-STATEMENT
+
+                                                    //START of ELSE-STATEMENT:
+                                                    else{
+                                                        error(userKey, "date", messageKey, message)
+                                                    }//END of ELSE-STATEMENT
                                                 }//END of IF-STATEMENT
 
                                                 //START of IF-STATEMENT:
-                                                if((types[3] == type) && (type == rem.child("type").getValue(String::class.java))){
+                                                if(types[3] == type){
                                                     val date = list[3]
                                                     val parts = date.split("-")
 
@@ -522,45 +310,30 @@ class Reminder{
 
                                                         //START of IF-STATEMENT:
                                                         if((month != null && month in 1..12) && (day != null && day in 1..31)){
+                                                            val time = list[4]
+
+                                                            //START of TRY-STATEMENT:
+                                                            try{
+                                                                LocalTime.parse(time, timeFormatter)
+                                                            }//END of TRY-STATEMENT
+
+                                                            //START of CATCH-STATEMENT:
+                                                            catch (e: DateTimeParseException){
+                                                                validTime = false
+                                                            }//END of CATCH-STATEMENT
+
                                                             //START of IF-STATEMENT:
-                                                            if(date == rem.child("date").getValue(String::class.java)){
-                                                                val time = list[4]
+                                                            if(validTime){
+                                                                val reminder = list.subList(5, list.size).joinToString(" ")
 
-                                                                //START of TRY-STATEMENT:
-                                                                try{
-                                                                    LocalTime.parse(time, timeFormatter)
-                                                                }//END of TRY-STATEMENT
-
-                                                                //START of CATCH-STATEMENT:
-                                                                catch (e: DateTimeParseException){
-                                                                    validTime = false
-                                                                }//END of CATCH-STATEMENT
-
-                                                                //START of IF-STATEMENT:
-                                                                if((validTime) && (time == rem.child("time").getValue(String::class.java))){
-                                                                    val reminder = list.subList(5, list.size).joinToString(" ")
-
-                                                                    //START of IF-STATEMENT:
-                                                                    if(reminder == rem.child("reminder").getValue(String::class.java)){
-                                                                        //START of IF-STATEMENT:
-                                                                        if(userKey == rem.child("userKey").getValue(String::class.java)){
-                                                                            reminderReference.child(rem.key.toString()).removeValue()
-                                                                            success(userKey, "remove", messageKey, message, type)
-                                                                            found = true
-                                                                        }//END of IF-STATEMENT
-
-                                                                        //START of ELSE-STATEMENT:
-                                                                        else{
-                                                                            error(userKey, "userKey", messageKey, message)
-                                                                        }//END of ELSE-STATEMENT
-                                                                    }//END of IF-STATEMENT
-                                                                }//END of IF-STATEMENT
-
-                                                                //START of ELSE-STATEMENT:
-                                                                else{
-                                                                    error(userKey, "time", messageKey, message)
-                                                                }//END of ELSE-STATEMENT
+                                                                reminderReference.child(reminderKey).setValue(Annually(userKey, type, date, time, reminder))
+                                                                success(userKey, "set", messageKey, type, reminder)
                                                             }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, "time", messageKey, message)
+                                                            }//END of ELSE-STATEMENT
                                                         }//END of IF-STATEMENT
 
                                                         //START of ELSE-STATEMENT:
@@ -580,20 +353,314 @@ class Reminder{
                                             else{
                                                 error(userKey, "type", messageKey, message)
                                             }//END of ELSE-STATEMENT
-                                        }//END of FOR-LOOP
-
-                                        //START of IF-STATEMENT:
-                                        if(!found){
-                                            error(userKey, "found", messageKey, message)
-                                        }//END of IF-STATEMENT
+                                        }
                                     }
-                                }
-                            }//END of IF-STATEMENT
+                                }//END of IF-STATEMENT
+                            }
+                    }//END of IF-STATEMENT
+                }//END of FOR-LOOP
+            }
+        }//END of IF-STATEMENT
+    }//END of FUNCTION: setReminder
+
+    //START of FUNCTION: removeReminder
+    private fun removeReminder(userKey: String, messageKey: String, message: String){
+        val contactReference = database.getReference("Palma/User/$userKey/Contact")
+        val userReference = database.getReference("Palma/User/$userKey/Personal Information")
+        val messageReference = database.getReference("Palma/Message/$messageKey")
+        val reminderReference = messageReference.child("Reminder")
+        val list = message.lowercase().trim().split(" ")
+        val types = arrayOf("daily", "weekly", "monthly", "annually")
+        val days = arrayOf("sunday", "monday", "tuesday", "wednesday", "thursday", "friday", "saturday")
+        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
+        var validTime = true
+        var found = false
+
+        contactReference.get().addOnSuccessListener{ contactSnapshot ->
+            //START of FOR-LOOP:
+            for(contact in contactSnapshot.children){
+                //START of IF-STATEMENT:
+                if(contact.child("messageKey").getValue(String::class.java) == messageKey){
+                    //START of IF-STATEMENT:
+                    if(contact.child("type").getValue(String::class.java) == "group"){
+                        contactReference.child("${contact.key}/Member").get().addOnSuccessListener{ memberSnapshot ->
+                            //START of FOR-LOOP:
+                            for(member in memberSnapshot.children){
+                                //START of IF-STATEMENT:
+                                if((listExecute.contains(member.child("username").getValue(String::class.java))) && (member.child("type").getValue(String::class.java) == "ai")){
+                                    terminate = true
+                                    Log.d("terminate", "true")
+
+                                    break
+                                }//END of IF-STATEMENT
+                            }//END of FOR-LOOP
                         }
+                    }//END of IF-STATEMENT
+
+                    //START of IF-STATEMENT:
+                    if(contact.child("type").getValue(String::class.java) == "ai"){
+                        break
+                    }//END of IF-STATEMENT
                 }//END of IF-STATEMENT
             }//END of FOR-LOOP
         }
 
+        //START of IF-STATEMENT:
+        if(!terminate){
+            Log.d("terminate", "false")
+            contactReference.get().addOnSuccessListener{ snapshot ->
+                //START of FOR-LOOP:
+                for(child in snapshot.children){
+                    val foundMessage = child.child("messageKey").getValue(String::class.java)
+
+                    //START of IF-STATEMENT:
+                    if(messageKey == foundMessage){
+                        val contactKey = child.key
+
+                        database.getReference("Palma/User/$userKey/Contact/$contactKey/Member").get()
+                            .addOnSuccessListener { memberSnapshot ->
+                                var cancel = "false"
+
+                                //START of FOR-LOOP:
+                                for(member in memberSnapshot.children){
+                                    val username = member.child("username").getValue(String::class.java)
+
+                                    //START of IF-STATEMENT:
+                                    if(username == "Palma"){
+                                        cancel = "true"
+                                        break
+                                    }//END of IF-STATEMENT
+                                }//END of FOR-LOOP
+
+                                //START of IF-STATEMENT:
+                                if(cancel == "false"){
+                                    userReference.get().addOnSuccessListener{ userSnapshot ->
+                                        reminderReference.get().addOnSuccessListener{ reminderSnapshot ->
+                                            val type = list[2]
+
+                                            //START of FOR-LOOP:
+                                            for(rem in reminderSnapshot.children){
+                                                //START of IF-STATEMENT:
+                                                if(type in types){
+                                                    //START of IF-STATEMENT:
+                                                    if((types[0] == type) && (type == rem.child("type").getValue(String::class.java))){
+                                                        val time = list[3]
+
+                                                        //START of TRY-STATEMENT:
+                                                        try{
+                                                            LocalTime.parse(time, timeFormatter)
+                                                        }//END of TRY-STATEMENT
+
+                                                        //START of CATCH-STATEMENT:
+                                                        catch (e: DateTimeParseException){
+                                                            validTime = false
+                                                        }//END of CATCH-STATEMENT
+
+                                                        //START of IF-STATEMENT:
+                                                        if((validTime) && (time == rem.child("time").getValue(String::class.java))){
+                                                            val reminder = list.subList(4, list.size).joinToString(" ")
+
+                                                            //START of IF-STATEMENT:
+                                                            if(reminder == rem.child("reminder").getValue(String::class.java)){
+                                                                //START of IF-STATEMENT:
+                                                                if(userKey == rem.child("userKey").getValue(String::class.java)){
+                                                                    reminderReference.child(rem.key.toString()).removeValue()
+                                                                    success(userKey, "remove", messageKey, message, type)
+                                                                    found = true
+                                                                }//END of IF-STATEMENT
+
+                                                                //START of ELSE-STATEMENT:
+                                                                else{
+                                                                    error(userKey, "userKey", messageKey, message)
+                                                                }//END of ELSE-STATEMENT
+                                                            }//END of IF-STATEMENT
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of ELSE-STATEMENT:
+                                                        else{
+                                                            error(userKey, "time", messageKey, message)
+                                                        }//END of ELSE-STATEMENT
+                                                    }//END of IF-STATEMENT
+
+                                                    //START of IF-STATEMENT:
+                                                    if((types[1] == type) && (type == rem.child("type").getValue(String::class.java))){
+                                                        val day = list[3]
+
+                                                        //START of IF-STATEMENT:
+                                                        if((day in days) && (day == rem.child("day").getValue(String::class.java))){
+                                                            val time = list[4]
+
+                                                            //START of TRY-STATEMENT:
+                                                            try{
+                                                                LocalTime.parse(time, timeFormatter)
+                                                            }//END of TRY-STATEMENT
+
+                                                            //START of CATCH-STATEMENT:
+                                                            catch (e: DateTimeParseException){
+                                                                validTime = false
+                                                            }//END of CATCH-STATEMENT
+
+                                                            //START of IF-STATEMENT:
+                                                            if((validTime) && (time == rem.child("time").getValue(String::class.java))){
+                                                                val reminder = list.subList(5, list.size).joinToString(" ")
+
+                                                                //START of IF-STATEMENT:
+                                                                if(reminder == rem.child("reminder").getValue(String::class.java)){
+                                                                    //START of IF-STATEMENT:
+                                                                    if(userKey == rem.child("userKey").getValue(String::class.java)){
+                                                                        reminderReference.child(rem.key.toString()).removeValue()
+                                                                        success(userKey, "remove", messageKey, message, type)
+                                                                        found = true
+                                                                    }//END of IF-STATEMENT
+
+                                                                    //START of ELSE-STATEMENT:
+                                                                    else{
+                                                                        error(userKey, "userKey", messageKey, message)
+                                                                    }//END of ELSE-STATEMENT
+                                                                }//END of IF-STATEMENT
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, "time", messageKey, message)
+                                                            }//END of ELSE-STATEMENT
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of ELSE-STATEMENT:
+                                                        else{
+                                                            error(userKey, "day", messageKey, message)
+                                                        }//END of ELSE-STATEMENT
+                                                    }//END of IF-STATEMENT
+
+                                                    //START of IF-STATEMENT:
+                                                    if((types[2] == type) && (type == rem.child("type").getValue(String::class.java))){
+                                                        val date = list[3]
+
+                                                        //START of IF-STATEMENT:
+                                                        if((date.toIntOrNull() in 1..31) && (date == rem.child("date").getValue(String::class.java))){
+                                                            val time = list[4]
+
+                                                            //START of TRY-STATEMENT:
+                                                            try{
+                                                                LocalTime.parse(time, timeFormatter)
+                                                            }//END of TRY-STATEMENT
+
+                                                            //START of CATCH-STATEMENT:
+                                                            catch (e: DateTimeParseException){
+                                                                validTime = false
+                                                            }//END of CATCH-STATEMENT
+
+                                                            //START of IF-STATEMENT:
+                                                            if((validTime) && (time == rem.child("time").getValue(String::class.java))){
+                                                                val reminder = list.subList(5, list.size).joinToString(" ")
+
+                                                                //START of IF-STATEMENT:
+                                                                if(reminder == rem.child("reminder").getValue(String::class.java)){
+                                                                    //START of IF-STATEMENT:
+                                                                    if(userKey == rem.child("userKey").getValue(String::class.java)){
+                                                                        reminderReference.child(rem.key.toString()).removeValue()
+                                                                        success(userKey, "remove", messageKey, message, type)
+                                                                        found = true
+                                                                    }//END of IF-STATEMENT
+
+                                                                    //START of ELSE-STATEMENT:
+                                                                    else{
+                                                                        error(userKey, "userKey", messageKey, message)
+                                                                    }//END of ELSE-STATEMENT
+                                                                }//END of IF-STATEMENT
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, "time", messageKey, message)
+                                                            }//END of ELSE-STATEMENT
+                                                        }//END of IF-STATEMENT
+                                                    }//END of IF-STATEMENT
+
+                                                    //START of IF-STATEMENT:
+                                                    if((types[3] == type) && (type == rem.child("type").getValue(String::class.java))){
+                                                        val date = list[3]
+                                                        val parts = date.split("-")
+
+                                                        //START of IF-STATEMENT:
+                                                        if(parts.size == 2){
+                                                            val month = parts[0].toIntOrNull()
+                                                            val day = parts[1].toIntOrNull()
+
+                                                            //START of IF-STATEMENT:
+                                                            if((month != null && month in 1..12) && (day != null && day in 1..31)){
+                                                                //START of IF-STATEMENT:
+                                                                if(date == rem.child("date").getValue(String::class.java)){
+                                                                    val time = list[4]
+
+                                                                    //START of TRY-STATEMENT:
+                                                                    try{
+                                                                        LocalTime.parse(time, timeFormatter)
+                                                                    }//END of TRY-STATEMENT
+
+                                                                    //START of CATCH-STATEMENT:
+                                                                    catch (e: DateTimeParseException){
+                                                                        validTime = false
+                                                                    }//END of CATCH-STATEMENT
+
+                                                                    //START of IF-STATEMENT:
+                                                                    if((validTime) && (time == rem.child("time").getValue(String::class.java))){
+                                                                        val reminder = list.subList(5, list.size).joinToString(" ")
+
+                                                                        //START of IF-STATEMENT:
+                                                                        if(reminder == rem.child("reminder").getValue(String::class.java)){
+                                                                            //START of IF-STATEMENT:
+                                                                            if(userKey == rem.child("userKey").getValue(String::class.java)){
+                                                                                reminderReference.child(rem.key.toString()).removeValue()
+                                                                                success(userKey, "remove", messageKey, message, type)
+                                                                                found = true
+                                                                            }//END of IF-STATEMENT
+
+                                                                            //START of ELSE-STATEMENT:
+                                                                            else{
+                                                                                error(userKey, "userKey", messageKey, message)
+                                                                            }//END of ELSE-STATEMENT
+                                                                        }//END of IF-STATEMENT
+                                                                    }//END of IF-STATEMENT
+
+                                                                    //START of ELSE-STATEMENT:
+                                                                    else{
+                                                                        error(userKey, "time", messageKey, message)
+                                                                    }//END of ELSE-STATEMENT
+                                                                }//END of IF-STATEMENT
+                                                            }//END of IF-STATEMENT
+
+                                                            //START of ELSE-STATEMENT:
+                                                            else{
+                                                                error(userKey, "date", messageKey, message)
+                                                            }//END of ELSE-STATEMENT
+                                                        }//END of IF-STATEMENT
+
+                                                        //START of ELSE-STATEMENT:
+                                                        else{
+                                                            error(userKey, "date", messageKey, message)
+                                                        }//END of ELSE-STATEMENT
+                                                    }//END of IF-STATEMENT
+                                                }//END of IF-STATEMENT
+
+                                                //START of ELSE-STATEMENT:
+                                                else{
+                                                    error(userKey, "type", messageKey, message)
+                                                }//END of ELSE-STATEMENT
+                                            }//END of FOR-LOOP
+
+                                            //START of IF-STATEMENT:
+                                            if(!found){
+                                                error(userKey, "found", messageKey, message)
+                                            }//END of IF-STATEMENT
+                                        }
+                                    }
+                                }//END of IF-STATEMENT
+                            }
+                    }//END of IF-STATEMENT
+                }//END of FOR-LOOP
+            }
+        }//END of IF-STATEMENT
     }//END of FUNCTION: removeReminder
 
     //START of FUNCTION: success
