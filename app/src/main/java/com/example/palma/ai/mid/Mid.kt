@@ -94,5 +94,32 @@ class Mid{
 
         Log.d("token count", countToken.toString())
         Log.d("character count", countCharacter.toString())
+
+        val context = classifyContext(prompt)
+
+        //START of IF-STATEMENT:
+        if(context == "etiquette"){
+            Etiquette().writeEtiquette(userKey, messageKey, prompt)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(context == "forecast"){
+            Forecast().writeForecast(userKey, messageKey, prompt)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(context == "query"){
+            Query().writeQuery(userKey, messageKey, prompt)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(context == "command"){
+            Command().writeCommand(userKey, messageKey, prompt)
+        }//END of IF-STATEMENT
     }//END of FUNCTION: writeMessage
+
+    //START of FUNCTION: classifyContext
+    private fun classifyContext(prompt: String): String{
+        return ""
+    }//END of FUNCTION: classifyContext
 }//END of CLASS: Mid
