@@ -1,5 +1,6 @@
 package com.example.palma.ai.rin
 
+import android.util.Log
 import com.example.palma.models.Contact
 import com.example.palma.models.Message
 import com.google.android.gms.tasks.Task
@@ -65,33 +66,12 @@ class Rin{
     }//END of FUNCTION: writeRin
 
     //START of FUNCTION: writeMessage
-    fun writeMessage(userKey: String, messageKey: String, message: String){
-        val list = message.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
-        val queryKey = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how")
-        val etiquetteKey = setOf("hello", "hi", "hey", "greetings", "morning", "afternoon", "evening", "night", "thank", "thanks", "bye", "goodbye", "goodnight", "later", "see", "take", "farewell")
-        val forecastKey = setOf("forecast", "weather", "temperature")
+    fun writeMessage(userKey: String, messageKey: String, prompt: String){
+        val list = Regex("[A-Za-z]+|\\d+|[-.,!?;:]").findAll(prompt).map{it.value}.toList()
+        val countToken = list.size
+        val countCharacter = prompt.length
 
-        //START of IF-STATEMENT:
-        if(list.any{it in etiquetteKey}){
-            Etiquette().writeEtiquette(userKey, messageKey, message)
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(list.any {it in forecastKey}){
-            Forecast().writeForecast(userKey, messageKey, message)
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(!list.any{it in forecastKey}){
-            //START of IF-STATEMENT:
-            if(((list.any{it in queryKey}) || (message.trim().endsWith("?")))){
-                Query().writeQuery(userKey, messageKey, message)
-            }//END of IF-STATEMENT
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(message.trim().startsWith("#")) {
-            Command().writeCommand(userKey, messageKey, message)
-        }//END of IF-STATEMENT
+        Log.d("token count", countToken.toString())
+        Log.d("character count", countCharacter.toString())
     }//END of FUNCTION: writeMessage
 }//END of CLASS: Rin
