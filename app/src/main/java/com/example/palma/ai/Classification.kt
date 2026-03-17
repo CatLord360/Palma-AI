@@ -17,19 +17,45 @@ class Classification(context: Context){
 
     //START of FUNCTION: classifyContext
     fun classifyContext(prompt: String): String{
-        val list = Regex("[A-Za-z]+|\\d+|[-.,!?;:]").findAll(prompt).map{it.value}.toList()
+
+        // Handle empty/null input safely
+        if (prompt.isBlank()) {
+            Log.e("TF", "Prompt is empty")
+            return "query"
+        }
+
+        val list = Regex("[A-Za-z]+|\\d+|[-.,!?;:]")
+            .findAll(prompt)
+            .map { it.value }
+            .toList()
+
         val countToken = list.size
         val countCharacter = prompt.length
 
         Log.d("token count", countToken.toString())
         Log.d("character count", countCharacter.toString())
 
-        val inputFeatures = floatArrayOf(countToken.toFloat(), countCharacter.toFloat())
-        val output = Array(1){FloatArray(4)}
-        interpreter.run(inputFeatures, output)
+        // ✅ FIX 1: Ensure correct shape [1,2]
+        val inputFeatures = arrayOf(
+            floatArrayOf(
+                countToken.toFloat(),
+                countCharacter.toFloat()
+            )
+        )
 
-        val prediction = output[0].indices.maxByOrNull{output[0][it]} ?: 0
-        this.classification = when(prediction){
+        // ✅ Output shape [1,4]
+        val output = Array(1) { FloatArray(4) }
+
+        try {
+            interpreter.run(inputFeatures, output)
+        } catch (e: Exception) {
+            Log.e("TF", "Interpreter run failed: ${e.message}")
+            return "query"
+        }
+
+        val prediction = output[0].indices.maxByOrNull { output[0][it] } ?: 0
+
+        this.classification = when (prediction) {
             0 -> "command"
             1 -> "etiquette"
             2 -> "query"
@@ -42,20 +68,23 @@ class Classification(context: Context){
     }//END of FUNCTION: classifyContext
 
     fun loadTFLiteModel(context: Context, fileName: String): Interpreter{
-        // Open the asset file descriptor
         val fileDescriptor = context.assets.openFd(fileName)
-
-        // Create an input stream from the file descriptor
         val inputStream = FileInputStream(fileDescriptor.fileDescriptor)
         val fileChannel = inputStream.channel
 
-        // Map the model file into memory
         val startOffset = fileDescriptor.startOffset
         val declaredLength = fileDescriptor.declaredLength
-        val buffer: MappedByteBuffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
 
-        // Create the TensorFlow Lite interpreter
-        return Interpreter(buffer)
+        val buffer: MappedByteBuffer =
+            fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength)
+
+        inputStream.close() // ✅ prevent leaks
+
+        val options = Interpreter.Options().apply {
+            setNumThreads(2) // optional optimization
+        }
+
+        return Interpreter(buffer, options)
     }
 
     //START of FUNCTION: classifyCommand

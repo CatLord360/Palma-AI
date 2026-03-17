@@ -1,6 +1,7 @@
 package com.example.palma.ai
 
 import android.content.Context
+import android.util.Log
 import com.example.palma.ai.index.Index
 import com.example.palma.ai.mid.Mid
 import com.example.palma.ai.palma.Palma
@@ -12,6 +13,8 @@ import com.example.palma.ai.tom.Tom
 class AI{
     //START of FUNCTION: writeAI
     fun writeAI(context: Context, userKey: String, messageKey: String, ai: String, message: String){
+        Log.d("ai", ai)
+
         //START of IF-STATEMENT:
         if(ai == "Palma"){
             Palma().writeMessage(context, userKey, messageKey, message)
