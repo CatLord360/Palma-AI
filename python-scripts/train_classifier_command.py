@@ -7,73 +7,64 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, GlobalAveragePooling1D, Dense
 from tensorflow.keras.utils import to_categorical
 
+print("🚀 Starting training for command classifier...")
+
 # ------------------------
-# 1️⃣ Context Dataset (Natural Version)
+# 1️⃣ Dataset (Natural Commands, improved)
 # ------------------------
 texts = [
-    # 🔹 COMMAND
-    "add milk to my list",
-    "create a new list",
-    "delete my grocery list",
-    "set a reminder at 5 pm",
-    "remind me tomorrow",
-    "add john to contacts",
-    "delete contact named mike",
-    "turn off the lights",
-    "play music",
+    # 🔹 LIST COMMANDS
+    "show my lists","show all lists","create a new list","create a list named groceries",
+    "make a list for shopping","load my grocery list","open my task list",
+    "delete my grocery list","remove my shopping list","add milk to my grocery list",
+    "add eggs to the list","remove bread from my list","delete eggs from grocery list",
+    "add item to my task list","remove item from my task list",
 
-    # 🔹 ETIQUETTE
-    "hi", "hello", "hey", "good morning", "thank you", "thanks a lot", "how are you",
+    # 🔹 REMINDER COMMANDS
+    "set a reminder","remind me at 07:00","set a daily reminder at 08:00",
+    "remind me every day at 08:00","set a weekly reminder on monday at 09:00",
+    "remind me every monday at 09:00","set a monthly reminder on the 15th",
+    "remind me every 15th of the month","set a yearly reminder on december 25",
+    "remind me every year on december 25","delete my reminder","cancel my reminder",
+    "remove reminder at 07:00","delete my weekly reminder","cancel reminder for tomorrow",
 
-    # 🔹 QUERY
-    "what time is it",
-    "who is the president",
-    "where is the nearest store",
-    "how does this work",
-    "what is the weather today",
-    "can you tell me the news",
+    # 🔹 CONTACT COMMANDS
+    "add a contact named john","save a new contact","create a contact for alice",
+    "add john to my contacts","delete john from my contacts",
+    "remove contact named mike","update contact details","edit contact information",
+    "save email for john","add email to contact","remove email from contact",
+    "create a group contact","delete group contact","add ai contact","remove ai contact",
 
-    # 🔹 FORECAST
-    "it will rain tomorrow",
-    "stock prices will rise",
-    "the weather will be hot",
-    "traffic will be heavy",
-
-    # 🔹 NONE / FALLBACK
-    "do something",
-    "help me",
-    "i don't know",
-    "just do it",
-    "random action"
+    # 🔹 DEFAULT / UNCLEAR
+    "do something","help me","i don't know","just do it",
+    "random action","perform a task","execute something"
 ]
 
 labels_text = (
-    ["command"] * 9 +
-    ["etiquette"] * 7 +
-    ["query"] * 6 +
-    ["forecast"] * 4 +
-    ["none"] * 5
+    ["list"] * 15 +
+    ["reminder"] * 15 +
+    ["contact"] * 15 +
+    ["default"] * 7
 )
 
 # ------------------------
-# 2️⃣ Label Encoding
+# 2️⃣ Encode labels
 # ------------------------
 label_map = {
-    "command": 0,
-    "etiquette": 1,
-    "query": 2,
-    "forecast": 3,
-    "none": 4
+    "list": 0,
+    "reminder": 1,
+    "contact": 2,
+    "default": 3
 }
 
 labels = np.array([label_map[l] for l in labels_text])
-labels = to_categorical(labels, num_classes=5)
+labels = to_categorical(labels, num_classes=4)
 
 # ------------------------
 # 3️⃣ Tokenize & Pad
 # ------------------------
-vocab_size = 1500
-max_length = 15
+vocab_size = 2000  # increased for natural commands
+max_length = 20    # slightly longer to capture full commands
 embedding_dim = 32
 
 texts = [t.lower() for t in texts]
@@ -84,11 +75,10 @@ tokenizer.fit_on_texts(texts)
 sequences = tokenizer.texts_to_sequences(texts)
 padded = pad_sequences(sequences, maxlen=max_length, padding='post')
 
-# Save tokenizer for Android/Kotlin
-with open("context_tokenizer.pkl", "wb") as f:
+# Save tokenizer
+with open("command_tokenizer.pkl", "wb") as f:
     pickle.dump(tokenizer, f)
-
-print("✅ Tokenizer saved as context_tokenizer.pkl")
+print("✅ Tokenizer saved")
 
 # ------------------------
 # 4️⃣ Build Model
@@ -96,9 +86,9 @@ print("✅ Tokenizer saved as context_tokenizer.pkl")
 model = Sequential([
     Embedding(vocab_size, embedding_dim, input_length=max_length),
     GlobalAveragePooling1D(),
+    Dense(64, activation='relu'),  # increased capacity
     Dense(32, activation='relu'),
-    Dense(16, activation='relu'),
-    Dense(5, activation='softmax')  # 5 classes
+    Dense(4, activation='softmax')
 ])
 
 model.compile(
@@ -107,18 +97,23 @@ model.compile(
     metrics=['accuracy']
 )
 
+model.build(input_shape=(None, max_length))
+model.summary()
+
 # ------------------------
 # 5️⃣ Train Model
 # ------------------------
-model.fit(padded, labels, epochs=120, verbose=2)
+model.fit(padded, labels, epochs=100, verbose=2)  # more epochs for better learning
+print("✅ Training complete")
 
 # ------------------------
 # 6️⃣ Convert to TFLite
 # ------------------------
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
+converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
 tflite_model = converter.convert()
 
-with open("context_classifier.tflite", "wb") as f:
+with open("command_classifier.tflite", "wb") as f:
     f.write(tflite_model)
-
-print("✅ Model exported as context_classifier.tflite")
+print("✅ TFLite model saved successfully!")
+print("✅ Tokenizer saved as command_tokenizer.pkl")

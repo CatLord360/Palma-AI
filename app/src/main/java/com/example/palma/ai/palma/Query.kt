@@ -2,6 +2,7 @@ package com.example.palma.ai.palma
 
 import android.content.Context
 import android.util.Log
+import com.example.palma.ai.TensorFlow.Classification
 import com.example.palma.ai.TensorFlow.Type
 import com.example.palma.models.Message
 import com.google.firebase.Firebase
@@ -24,7 +25,6 @@ class Query{
         "my", "your", "his", "her", "their", "our", "someone", "something",
         "other", "they", "them", "that", "this", "these", "those", "give", "know"
     )
-    private val command = setOf("#list", "#reminder", "#contact")
 
     //START of FUNCTION: writeQuery
     fun writeQuery(context: Context, userKey: String, messageKey: String, prompt: String){
@@ -76,7 +76,7 @@ class Query{
 
                         Log.d("query", query)
                         Log.d("classification", classification)
-                        queryLog(userKey, messageKey, classification, query)
+                        queryLog(context, userKey, messageKey, classification, query)
 
                         break
                     }//END of WHILE-LOOP
@@ -349,13 +349,11 @@ class Query{
     }//END of FUNCTION: queryUser
 
     //START of FUNCTION: queryLog
-    private fun queryLog(userKey: String, messageKey: String, classification: String, query: String){
+    private fun queryLog(context: Context, userKey: String, messageKey: String, classification: String, query: String){
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val current = LocalDateTime.now()
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-
-        val interrogative = setOf("what", "whats", "what's", "when", "where", "which", "who", "whom", "whose", "why", "how", "could", "do")
         val list = query.lowercase().split(Regex("[^\\w']+")).map{it.removeSuffix("s")}.filter{it.isNotBlank()}
         val keywords = list.filter{it !in cancel}.toSet()
         val lastKeyword = keywords.lastOrNull() ?: ""
@@ -395,10 +393,12 @@ class Query{
                         if(foundUserKey.startsWith("User")){
                             val foundMessage = messageSnapshot.child("$foundLogKey/message").getValue(String::class.java).toString()
                             val foundList = foundMessage.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+                            val type = Classification(context).classifyContext(foundMessage)
+
                             Log.d("found message", foundMessage)
 
                             //START of IF-STATEMENT:
-                            if(!(foundList.any{it in interrogative} || foundMessage.endsWith("?") || command.contains(foundList[0]))){
+                            if((type != "query") && (type != "command")){
                                 val normalizedKeywords = keywords.map{it.removeSuffix("s")}.toSet()
                                 val normalizedList = foundList.map{it.removeSuffix("s")}.toSet()
                                 val foundAnswer = foundList.filter{word -> word.removeSuffix("s") !in normalizedKeywords && word !in cancel}.joinToString(" ")
@@ -457,10 +457,12 @@ class Query{
                         if(foundUserKey.startsWith("User")){
                             val foundMessage = messageSnapshot.child("$foundLogKey/message").getValue(String::class.java).toString()
                             val foundList = foundMessage.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+                            val type = Classification(context).classifyContext(foundMessage)
+
                             Log.d("found message", foundMessage)
 
                             //START of IF-STATEMENT:
-                            if(!(foundList.any{it in interrogative} || foundMessage.endsWith("?") || command.contains(foundList[0]))){
+                            if((type != "query") && (type != "command")){
                                 val normalizedKeywords = keywords.filter{it !in cancel}.map{it.removeSuffix("s")}.toSet()
 
                                 //START of IF-STATEMENT:
@@ -497,16 +499,16 @@ class Query{
                         messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
                     }//END of IF-STATEMENT
 
-                    //START of ELSE-STATEMENT: no matches
-                    else {
-                        if((classification != "ai") && (classification != "user")) {
+                    //START of ELSE-STATEMENT:
+                    else{
+                        if((classification != "ai") && (classification != "user")){
                             message = "I don't know $cleaned are."
                             messageReference.child(newLogKey).setValue(Message(aiKey, date, time, message))
                         }
-                        if(classification == "ai") {
+                        if(classification == "ai"){
                             queryAI(messageKey, query)
                         }
-                        if(classification == "user") {
+                        if(classification == "user"){
                             queryUser(userKey, messageKey, query)
                         }
                     }//END of ELSE-STATEMENT
@@ -522,10 +524,12 @@ class Query{
                         if(foundUserKey.startsWith("User")){
                             val foundMessage = messageSnapshot.child("$foundLogKey/message").getValue(String::class.java).toString()
                             val foundList = foundMessage.lowercase().replace(Regex("[^a-z0-9\\s@]"), "").trim().split(Regex("\\s+"))
+                            val type = Classification(context).classifyContext(foundMessage)
+
                             Log.d("found message", foundMessage)
 
                             //START of IF-STATEMENT:
-                            if(!(foundList.any{it in interrogative} || foundMessage.endsWith("?") || command.contains(foundList[0]))){
+                            if((type != "query") && (type != "command")){
                                 val normalizedKeywords = keywords.map{it.removeSuffix("s")}.toSet()
                                 val normalizedList = foundList.map{it.removeSuffix("s")}.toSet()
 

@@ -1,6 +1,7 @@
 package com.example.palma.ai.pinky
 
 import android.content.Context
+import com.example.palma.ai.TensorFlow.Type
 import com.example.palma.models.Message
 import com.example.palma.models.WeatherResponse
 import com.example.palma.api.WeatherApiClient
@@ -23,36 +24,33 @@ class Forecast{
     private val aiKey = "AI - 6"
 
     //START of FUNCTION: writeForecast
-    fun writeForecast(context: Context, userKey: String, messageKey: String, message: String){
-        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
-        val currentKey = setOf("current", "now", "today")
-        val pastKey = setOf("past", "yesterday", "before", "ago")
-        val futureKey = setOf("future", "tomorrow", "later")
+    fun writeForecast(context: Context, userKey: String, messageKey: String, prompt: String){
+        val type = Type(context).typeForecast(prompt)
 
         //START of IF-STATEMENT:
-        if(list.any {it in currentKey}){
-            currentForecast(userKey, messageKey, message)
+        if(type == "current"){
+            currentForecast(userKey, messageKey, prompt)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        else if(list.any {it in pastKey}){
-            pastForecast(userKey, messageKey, message)
+        else if(type == "past"){
+            pastForecast(userKey, messageKey, prompt)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
-        else if(list.any {it in futureKey}){
-            futureForecast(userKey, messageKey, message)
+        else if(type == "future"){
+            futureForecast(userKey, messageKey, prompt)
         }//END of IF-STATEMENT
 
         //START of ELSE-STATEMENT:
         else{
-            Query().writeQuery(context, userKey, messageKey, message)
+            Query().writeQuery(context, userKey, messageKey, prompt)
         }//END of ELSE-STATEMENT
     }//END of FUNCTION: writeForecast
 
     //START of FUNCTION: currentForecast
-    private fun currentForecast(userKey: String, messageKey: String, message: String){
-        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
+    private fun currentForecast(userKey: String, messageKey: String, prompt: String){
+        val list = prompt.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val now = LocalDateTime.now()
@@ -191,14 +189,14 @@ class Forecast{
     }//END of FUNCTION: currentForecast
 
     //START of FUNCTION: pastForecast
-    private fun pastForecast(userKey: String, messageKey: String, message: String){
-        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
+    private fun pastForecast(userKey: String, messageKey: String, prompt: String){
+        val list = prompt.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val now = LocalDateTime.now()
         val date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-        val words = message.lowercase().trim().split(" ")
+        val words = prompt.lowercase().trim().split(" ")
         var days = words.firstOrNull { it.toIntOrNull() != null }?.toInt() ?: 1
         var forecast = ""
 
@@ -364,14 +362,14 @@ class Forecast{
     }//END of FUNCTION: pastForecast
 
     //START of FUNCTION: futureForecast
-    private fun futureForecast(userKey: String, messageKey: String, message: String){
-        val list = message.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
+    private fun futureForecast(userKey: String, messageKey: String, prompt: String){
+        val list = prompt.lowercase().replace(Regex("[^a-z0-9\\s]"), "").trim().split(Regex("\\s+"))
         val userReference = database.getReference("Palma/User/$userKey/Personal Information")
         val messageReference = database.getReference("Palma/Message/$messageKey")
         val now = LocalDateTime.now()
         val date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = now.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
-        val words = message.lowercase().trim().split(" ")
+        val words = prompt.lowercase().trim().split(" ")
         var days = words.firstOrNull { it.toIntOrNull() != null }?.toInt() ?: 1
         var forecast = ""
 

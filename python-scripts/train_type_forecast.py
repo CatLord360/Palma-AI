@@ -7,53 +7,62 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Embedding, GlobalAveragePooling1D, Dense
 from tensorflow.keras.utils import to_categorical
 
-print("🚀 Starting training for query type classifier...")
+print("🚀 Starting training for forecast type classifier...")
 
 # ------------------------
-# 1️⃣ Dataset (Balanced)
+# 1️⃣ Dataset (IMPROVED)
 # ------------------------
 texts = [
-    # 🔹 USER QUERIES (personal info)
-    "what is my username",
-    "show my email",
-    "what is my phone number",
-    "tell me my address",
-    "when is my birthday",
-    "what is my gender",
-    "give me my contact info",
-    "show my mobile number",
 
-    # 🔹 AI PERSONAL INFO-LIKE QUERIES
-    "what is the AI's name",
-    "show AI's email",
-    "what is the AI's contact number",
-    "tell me the AI's address",
-    "when was the AI created",
-    "what is the AI's gender",
-    "show AI's mobile number",
-    "what is AI's role",
+    # 🔹 PAST WEATHER (clear past indicators)
+    "what was the weather yesterday",
+    "did it rain yesterday",
+    "how was the weather last night",
+    "what was the temperature earlier today",
+    "was it hot yesterday",
+    "did it rain last week",
+    "what was the weather last monday",
+    "how was the weather before",
+    "what was the weather previously",
 
-    # 🔹 LOG QUERIES (based on stored message logs)
-    "tell me about cats",
-    "what do you know about dogs",
-    "give me information on quantum physics",
-    "what do you know about Python programming",
-    "show details about the recipe",
-    "what was the last fact I mentioned",
-    "what do you know about basketball",
-    "do you remember movies we talked about"
+    # 🔹 CURRENT WEATHER (strong current indicators)
+    "what is the weather now",
+    "is it raining right now",
+    "how is the weather today",
+    "what is the temperature right now",
+    "is it hot now",
+    "do i need an umbrella right now",
+    "what is the weather currently",
+    "how is the weather at the moment",
+    "is it sunny right now",
+
+    # 🔹 FUTURE WEATHER (clear future indicators)
+    "will it rain tomorrow",
+    "what will the weather be tomorrow",
+    "is it going to rain later",
+    "weather forecast for next week",
+    "will it be hot this afternoon",
+    "is it going to storm tonight",
+    "what is the weather this weekend",
+    "will it rain next week",
+    "what will the temperature be tomorrow"
 ]
 
 labels_text = (
-    ["user"] * 8 +
-    ["ai"] * 8 +
-    ["log"] * 8
+    ["past"] * 9 +
+    ["current"] * 9 +
+    ["future"] * 9
 )
 
 # ------------------------
 # 2️⃣ Label Encoding
 # ------------------------
-label_map = {"user": 0, "ai": 1, "log": 2}
+label_map = {
+    "past": 0,
+    "current": 1,
+    "future": 2
+}
+
 labels = np.array([label_map[l] for l in labels_text])
 labels = to_categorical(labels, num_classes=3)
 
@@ -64,7 +73,7 @@ vocab_size = 1500
 max_length = 12
 embedding_dim = 32
 
-texts = [t.lower().strip() for t in texts]
+texts = [t.lower() for t in texts]
 
 tokenizer = Tokenizer(num_words=vocab_size, oov_token="<OOV>")
 tokenizer.fit_on_texts(texts)
@@ -72,11 +81,11 @@ tokenizer.fit_on_texts(texts)
 sequences = tokenizer.texts_to_sequences(texts)
 padded = pad_sequences(sequences, maxlen=max_length, padding='post')
 
-# Save tokenizer for use in app
-with open("query_tokenizer.pkl", "wb") as f:
+# 🔥 SAVE TOKENIZER (FIXED NAME)
+with open("forecast_tokenizer.pkl", "wb") as f:
     pickle.dump(tokenizer, f)
 
-print("✅ Tokenizer saved")
+print("✅ Tokenizer saved as forecast_tokenizer.pkl")
 
 # ------------------------
 # 4️⃣ Build Model
@@ -86,7 +95,7 @@ model = Sequential([
     GlobalAveragePooling1D(),
     Dense(32, activation='relu'),
     Dense(16, activation='relu'),
-    Dense(3, activation='softmax')  # user, ai, log
+    Dense(3, activation='softmax')  # past, current, future
 ])
 
 model.compile(
@@ -101,7 +110,8 @@ model.summary()
 # ------------------------
 # 5️⃣ Train Model
 # ------------------------
-model.fit(padded, labels, epochs=100, verbose=2)  # increased epochs for better accuracy
+model.fit(padded, labels, epochs=120, verbose=2)
+
 print("✅ Training complete")
 
 # ------------------------
@@ -110,13 +120,12 @@ print("✅ Training complete")
 print("🔄 Converting to TFLite...")
 
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
-converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS]
 
-# ⚠️ Keep float32 for embedding input
+# ⚠️ KEEP DEFAULT (FLOAT32)
 tflite_model = converter.convert()
 
-with open("query_type.tflite", "wb") as f:
+# 🔥 SAVE MODEL (FIXED NAME)
+with open("forecast_type.tflite", "wb") as f:
     f.write(tflite_model)
 
-print("✅ TFLite model saved successfully!")
-print("✅ Tokenizer saved as query_tokenizer.pkl")
+print("✅ TFLite model saved as forecast_type.tflite")

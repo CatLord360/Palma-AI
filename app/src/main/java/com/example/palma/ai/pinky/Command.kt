@@ -1,17 +1,21 @@
 package com.example.palma.ai.pinky
 
 import android.content.Context
+import android.util.Log
 import com.example.palma.ai.TensorFlow.Classification
+import com.example.palma.ai.TensorFlow.Translator
 
 //START of CLASS: Command
 class Command{
     //START of FUNCTION: writeCommand:
     fun writeCommand(context: Context, userKey: String, messageKey: String, prompt: String){
         val classification = Classification(context).classifyCommand(prompt)
+        val command = Translator().command(prompt)
 
         //START of IF-STATEMENT
         if(classification == "list"){
-            List().writeList(userKey, messageKey, prompt)
+            Log.d("command", command)
+            List().writeList(userKey, messageKey, command)
         }//END of IF-STATEMENT
     }//END of FUNCTION: writeCommand
 }//END of CLASS: Command
