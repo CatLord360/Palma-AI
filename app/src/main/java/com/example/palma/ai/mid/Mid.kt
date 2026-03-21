@@ -93,6 +93,7 @@ class Mid{
 
     //START of FUNCTION: writeMessage
     fun writeMessage(context: Context, userKey: String, messageKey: String, prompt: String){
+        val list = prompt.lowercase().split(" ")
         val classification = Classification(context).classifyContext(prompt)
 
         //START of IF-STATEMENT:
@@ -108,6 +109,11 @@ class Mid{
         //START of IF-STATEMENT:
         if(classification == "query"){
             Query().writeQuery(context, userKey, messageKey, prompt)
+        }//END of IF-STATEMENT
+
+        //START of IF-STATEMENT:
+        if(list.any{it in curseKey}){
+            Curse().writeCurse(userKey, messageKey, prompt)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
