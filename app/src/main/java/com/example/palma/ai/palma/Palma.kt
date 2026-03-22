@@ -2,6 +2,7 @@ package com.example.palma.ai.palma
 
 import android.content.Context
 import com.example.palma.ai.TensorFlow.Classification
+import com.example.palma.ai.Torch
 import com.example.palma.models.Contact
 import com.example.palma.models.Message
 import com.google.android.gms.tasks.Task
@@ -14,6 +15,7 @@ import java.time.format.DateTimeFormatter
 //START of CLASS: Palma
 class Palma{
     private val database = Firebase.database
+    private val aiKey = "AI - 1"
 
     //START of FUNCTION: writePalma
     fun writePalma(userKey: String, username: String): Task<Void> {
@@ -71,18 +73,8 @@ class Palma{
         val classification = Classification(context).classifyContext(prompt)
 
         //START of IF-STATEMENT:
-        if(classification == "etiquette"){
-            Etiquette().writeEtiquette(userKey, messageKey, prompt)
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(classification == "forecast"){
-            Forecast().writeForecast(context, userKey, messageKey, prompt)
-        }//END of IF-STATEMENT
-
-        //START of IF-STATEMENT:
-        if(classification == "query"){
-            Query().writeQuery(context, userKey, messageKey, prompt)
+        if(classification != "command"){
+            Torch().torch(aiKey, messageKey, prompt)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
