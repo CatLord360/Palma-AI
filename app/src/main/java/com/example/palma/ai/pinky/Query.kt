@@ -2,8 +2,8 @@ package com.example.palma.ai.pinky
 
 import android.content.Context
 import android.util.Log
-import com.example.palma.ai.TensorFlow.Classification
-import com.example.palma.ai.TensorFlow.Type
+import com.example.palma.ai.tensor.Classification
+import com.example.palma.ai.tensor.Type
 import com.example.palma.models.Message
 import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot

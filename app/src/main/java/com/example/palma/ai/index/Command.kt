@@ -2,8 +2,8 @@ package com.example.palma.ai.index
 
 import android.content.Context
 import android.util.Log
-import com.example.palma.ai.TensorFlow.Build
-import com.example.palma.ai.TensorFlow.Classification
+import com.example.palma.ai.tensor.Build
+import com.example.palma.ai.tensor.Classification
 
 //START of CLASS: Command
 class Command{

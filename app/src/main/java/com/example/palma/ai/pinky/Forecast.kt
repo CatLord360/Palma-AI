@@ -1,7 +1,7 @@
 package com.example.palma.ai.pinky
 
 import android.content.Context
-import com.example.palma.ai.TensorFlow.Type
+import com.example.palma.ai.tensor.Type
 import com.example.palma.models.Message
 import com.example.palma.models.WeatherResponse
 import com.example.palma.api.WeatherApiClient

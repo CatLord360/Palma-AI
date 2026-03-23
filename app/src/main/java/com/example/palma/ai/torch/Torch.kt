@@ -1,6 +1,7 @@
-package com.example.palma.ai
+package com.example.palma.ai.torch
 
 import android.content.Context
+import android.util.Log
 import com.example.palma.models.Message
 import com.google.firebase.Firebase
 import com.google.firebase.database.DataSnapshot
@@ -25,9 +26,10 @@ class Torch{
                 //START of FUNCTION: onDataChange
                 override fun onDataChange(snapshot: DataSnapshot){
                     var index = 1
-                    val response = try {
+                    val message = try {
                         InferenceProvider.get(context).generateResponse(prompt, maxTokens = 50)
                     } catch (e: Exception) {
+                        Log.e("exception", e.toString())
                         "Sorry, I could not generate a response right now."
                     }
                     var key = "message$index"
@@ -38,7 +40,7 @@ class Torch{
                         key = "message$index"
                     }//END of WHILE-LOOP
 
-                    messageReference.child(key).setValue(Message(aiKey, date, time, response))
+                    messageReference.child(key).setValue(Message(aiKey, date, time, message))
                 }//END of FUNCTION: onDataChange
 
                 //START of FUNCTION: onCancelled

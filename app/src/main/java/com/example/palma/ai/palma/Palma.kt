@@ -1,8 +1,8 @@
 package com.example.palma.ai.palma
 
 import android.content.Context
-import com.example.palma.ai.TensorFlow.Classification
-import com.example.palma.ai.Torch
+import com.example.palma.ai.tensor.Classification
+import com.example.palma.ai.torch.Torch
 import com.example.palma.models.Contact
 import com.example.palma.models.Message
 import com.google.android.gms.tasks.Task
