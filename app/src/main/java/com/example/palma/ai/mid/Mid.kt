@@ -1,7 +1,7 @@
 package com.example.palma.ai.mid
 
 import android.content.Context
-import com.example.palma.ai.TensorFlow.Classification
+import com.example.palma.ai.tensor.Classification
 import com.example.palma.ai.palma.Command
 import com.example.palma.ai.palma.Etiquette
 import com.example.palma.ai.palma.Forecast

@@ -1,4 +1,4 @@
-package com.example.palma.ai.TensorFlow
+package com.example.palma.ai.tensor
 
 import android.util.Log
 import android.content.Context

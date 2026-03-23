@@ -1,4 +1,4 @@
-package com.example.palma.ai.TensorFlow
+package com.example.palma.ai.tensor
 
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter

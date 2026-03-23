@@ -1,4 +1,4 @@
-package com.example.palma.ai
+package com.example.palma.ai.torch
 
 import android.content.Context
 import org.tensorflow.lite.DataType
