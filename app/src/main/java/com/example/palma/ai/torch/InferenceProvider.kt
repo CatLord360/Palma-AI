@@ -1,12 +1,14 @@
 package com.example.palma.ai.torch
 
 import android.content.Context
+import android.util.Log
 
-object InferenceProvider {
+object InferenceProvider{
     @Volatile
     private var instance: ModelInference? = null
 
     fun get(context: Context): ModelInference {
+        Log.d("InferenceProvider", "get")
         val existing = instance
         if (existing != null) return existing
 

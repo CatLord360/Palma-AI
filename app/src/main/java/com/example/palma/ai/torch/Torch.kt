@@ -21,17 +21,15 @@ class Torch{
         val current = LocalDateTime.now()
         val date = current.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"))
         val time = current.format(DateTimeFormatter.ofPattern("HH:mm:ss"))
+        val message = try{InferenceProvider.get(context).generateResponse(prompt, maxTokens = 50)}catch(e: Exception){
+            Log.e("exception", e.toString())
+            "Sorry, I could not generate a response right now."
+        }
 
         messageReference.addListenerForSingleValueEvent(object : ValueEventListener{
                 //START of FUNCTION: onDataChange
                 override fun onDataChange(snapshot: DataSnapshot){
                     var index = 1
-                    val message = try {
-                        InferenceProvider.get(context).generateResponse(prompt, maxTokens = 50)
-                    } catch (e: Exception) {
-                        Log.e("exception", e.toString())
-                        "Sorry, I could not generate a response right now."
-                    }
                     var key = "message$index"
 
                     //START of WHILE-LOOP:

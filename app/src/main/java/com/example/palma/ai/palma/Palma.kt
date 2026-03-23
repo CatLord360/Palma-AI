@@ -1,6 +1,7 @@
 package com.example.palma.ai.palma
 
 import android.content.Context
+import android.util.Log
 import com.example.palma.ai.tensor.Classification
 import com.example.palma.ai.torch.Torch
 import com.example.palma.models.Contact
@@ -71,6 +72,8 @@ class Palma{
     //START of FUNCTION: writeMessage
     fun writeMessage(context: Context, userKey: String, messageKey: String, prompt: String){
         val classification = Classification(context).classifyContext(prompt)
+
+        Log.d("prompt", prompt)
 
         //START of IF-STATEMENT:
         if(classification != "command"){

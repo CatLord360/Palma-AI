@@ -73,6 +73,7 @@ dependencies {
     implementation(libs.googleid)
     implementation(libs.firebase.database)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation("io.github.eix128:sentencepiece4j:1.0.2")
     implementation("com.squareup.okhttp3:okhttp:5.3.2")
     implementation("org.tensorflow:tensorflow-lite:2.15.0")
     implementation("org.tensorflow:tensorflow-lite-gpu:2.15.0")
