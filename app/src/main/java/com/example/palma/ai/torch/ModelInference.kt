@@ -9,7 +9,7 @@ import kotlin.math.exp
 import kotlin.random.Random
 
 /** Handles TFLite model loading and text generation. */
-class ModelInference(val context: Context) {
+class ModelInference(val context: Context){
     private val tag = "ModelInference"
     private var interpreter: Interpreter? = null
     private lateinit var tokenizer: SentencePieceTokenizer

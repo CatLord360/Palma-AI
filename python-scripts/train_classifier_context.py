@@ -1,144 +1,144 @@
 import numpy as np
 import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.callbacks import EarlyStopping
+import pickle
 
 print("🚀 Starting training for context classifier...")
+
+np.random.seed(42)
+tf.random.set_seed(42)
 
 # ------------------------
 # 1️⃣ Dataset
 # ------------------------
-texts = [
+texts = []
+labels_text = []
 
-    # 🔹 COMMAND
-    "show my lists","show all lists","create a new list","create a list named groceries",
-    "make a list for shopping","load my grocery list","open my task list",
-    "delete my grocery list","remove my shopping list","add milk to my grocery list",
-    "add eggs to the list","remove bread from my list","delete eggs from grocery list",
-    "add item to my task list","remove item from my task list",
+def add(samples, label):
+    texts.extend(samples)
+    labels_text.extend([label] * len(samples))
 
-    "set a reminder","remind me at 7 pm","set a daily reminder at 8 am",
-    "remind me every day at 8 am","set a weekly reminder on monday at 9 am",
-    "remind me every monday at 9 am","set a monthly reminder on the 15th",
-    "remind me every 15th of the month","set a yearly reminder on december 25",
-    "remind me every year on december 25","delete my reminder","cancel my reminder",
-    "remove reminder at 7 pm","delete my weekly reminder","cancel reminder for tomorrow",
+# COMMAND
+add([
+    "show my lists","create a list","add milk","remove eggs",
+    "set a reminder","remind me at 7 pm","delete reminder",
+    "add contact john","delete contact mike"
+], "command")
 
-    "add a contact named john","save a new contact","create a contact for alice",
-    "add john to my contacts","delete john from my contacts",
-    "remove contact named mike","update contact details","edit contact information",
-    "save email for john","add email to contact","remove email from contact",
-    "create a group contact","delete group contact","add ai contact","remove ai contact",
+# ETIQUETTE (including farewells)
+add([
+    "hi","hello","hey","greetings",
+    "good morning","good evening",
+    "thank you","thanks",
+    "how are you","nice to meet you",
+    "bye","goodbye","see you later","take care"
+], "etiquette")
 
-    # 🔹 ETIQUETTE
-    "hi","hello","hey","good morning","good evening",
-    "thank you","thanks a lot","how are you","greetings",
-
-    # 🔹 QUERY
-    "what is my username","show my email","what is my phone number",
-    "tell me my address","when is my birthday","what is my gender",
-    "give me my contact info","show my mobile number",
-
-    "what is the ai name","show ai email","what is the ai contact number",
-    "tell me the ai address","when was the ai created",
-    "what is the ai gender","show ai mobile number",
-
+# QUERY
+add([
+    "what is my name","who are you","what can you do",
     "tell me about cats","what do you know about dogs",
-    "give me information on quantum physics",
-    "what do you know about python programming",
-    "show details about the recipe",
-    "what was the last fact i mentioned",
-    "what do you know about basketball",
-    "do you remember movies we talked about",
+    "what is my email","what is my phone number"
+], "query")
 
-    # 🔹 FORECAST
-    "what was the weather yesterday","did it rain last night",
-    "how was the weather this morning","what was the temperature earlier",
-    "was it hot yesterday","did it rain last week",
-    "how was the weather last monday",
-
-    "what is the weather now","is it raining right now",
-    "how is the weather today","what is the temperature outside",
-    "is it hot right now","do i need an umbrella now",
-    "what is the weather like",
-
-    "will it rain tomorrow","what will the weather be like tomorrow",
-    "is it going to rain later","weather forecast for next week",
-    "will it be hot this afternoon","is it going to storm tonight",
-    "what is the weather this weekend"
-]
+# FORECAST
+add([
+    "what is the weather today","is it raining",
+    "will it rain tomorrow","weather forecast",
+    "is it hot today","temperature outside"
+], "forecast")
 
 # ------------------------
-# 2️⃣ Labels
+# 2️⃣ Encode labels
 # ------------------------
-labels_text = (
-    ["command"] * 45 +
-    ["etiquette"] * 9 +
-    ["query"] * 23 +
-    ["forecast"] * 21
-)
-
-# ------------------------
-# 3️⃣ Encode labels
-# ------------------------
-label_map = {
-    "command": 0,
-    "etiquette": 1,
-    "query": 2,
-    "forecast": 3
-}
-
+label_map = {"command":0,"etiquette":1,"query":2,"forecast":3}
 labels = np.array([label_map[l] for l in labels_text])
-labels = tf.keras.utils.to_categorical(labels, num_classes=4)
+labels = to_categorical(labels, num_classes=4)
 
 # ------------------------
-# 4️⃣ 🔥 IMPROVED FEATURES (CRITICAL FIX)
+# 3️⃣ Feature extraction (🔥 FIXED: 6 FEATURES ONLY)
 # ------------------------
-def feature_vector(text):
-    text = text.lower()
-    tokens = text.split()
+command_words = {"add","delete","create","set","remove","load","open"}
+forecast_words = {"weather","rain","temperature","forecast"}
+query_words = {"what","who","where","when","why","how","tell"}
+etiquette_words = {"hello","hi","hey","thanks","thank","bye","goodbye","farewell","later","see","greetings","morning","afternoon","evening","night"}
 
-    return [
-        len(tokens),                      # token count
-        len(text),                        # char count
-        int("?" in text),                 # question indicator
-        int(any(w in text for w in ["add","delete","create","set","remove","load"])),  # command words
-        int(any(w in text for w in ["weather","rain","temperature","forecast"])),     # forecast words
-        int(any(w in text for w in ["what","who","where","when","how","tell"])),      # query words
-    ]
+def extract_features(texts):
+    features = []
+    for t in texts:
+        t_lower = t.lower()
+        tokens = t_lower.split()
+        features.append([
+            len(tokens),                         # token count
+            len(t_lower),                         # char count
+            1.0 if "?" in t_lower else 0.0,      # question mark
+            1.0 if any(w in t_lower for w in command_words) else 0.0,
+            1.0 if any(w in t_lower for w in forecast_words) else 0.0,
+            1.0 if any(w in t_lower for w in query_words.union(etiquette_words)) else 0.0
+        ])
+    return np.array(features, dtype=np.float32)
 
-X = np.array([feature_vector(t) for t in texts], dtype=np.float32)
+input_features = extract_features(texts)
 
 # ------------------------
-# 5️⃣ Model
+# 4️⃣ Model (6 features)
 # ------------------------
-model = tf.keras.Sequential([
-    tf.keras.layers.Input(shape=(6,)),   # 🔥 NOW 6 FEATURES
-    tf.keras.layers.Dense(32, activation='relu'),
-    tf.keras.layers.Dense(16, activation='relu'),
-    tf.keras.layers.Dense(4, activation='softmax')
+model = Sequential([
+    Dense(64, activation='relu', input_shape=(6,)),
+    Dropout(0.3),
+    Dense(32, activation='relu'),
+    Dense(4, activation='softmax')
 ])
 
 model.compile(
-    optimizer='adam',
     loss='categorical_crossentropy',
+    optimizer='adam',
     metrics=['accuracy']
 )
 
-# ------------------------
-# 6️⃣ Train
-# ------------------------
-model.fit(X, labels, epochs=150, verbose=2)
+model.summary()
 
 # ------------------------
-# 7️⃣ Convert to TFLite (SAFE)
+# 5️⃣ Train
+# ------------------------
+class_counts = np.sum(labels, axis=0)
+total_samples = labels.shape[0]
+class_weights = {i: total_samples/(4*count) for i, count in enumerate(class_counts)}
+
+early_stop = EarlyStopping(monitor='val_accuracy', patience=10, restore_best_weights=True)
+
+model.fit(
+    input_features,
+    labels,
+    epochs=200,
+    verbose=2,
+    validation_split=0.2,
+    class_weight=class_weights,
+    callbacks=[early_stop]
+)
+
+print("✅ Training complete")
+
+# ------------------------
+# 6️⃣ Convert to TFLite
 # ------------------------
 converter = tf.lite.TFLiteConverter.from_keras_model(model)
-
 converter.inference_input_type = tf.float32
 converter.inference_output_type = tf.float32
-
 tflite_model = converter.convert()
 
 with open("context_classifier.tflite", "wb") as f:
     f.write(tflite_model)
 
-print("✅ context_classifier.tflite generated successfully!")
+print("✅ context_classifier.tflite saved!")
+
+# ------------------------
+# 7️⃣ Save tokenizer
+# ------------------------
+with open("context_tokenizer.pkl", "wb") as f:
+    pickle.dump(texts, f)
+
+print("✅ Tokenizer saved (for reference)")

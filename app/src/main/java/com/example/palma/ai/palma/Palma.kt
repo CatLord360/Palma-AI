@@ -3,6 +3,7 @@ package com.example.palma.ai.palma
 import android.content.Context
 import android.util.Log
 import com.example.palma.ai.tensor.Classification
+import com.example.palma.ai.tensor.Prompt
 import com.example.palma.ai.torch.Torch
 import com.example.palma.models.Contact
 import com.example.palma.models.Message
@@ -77,7 +78,7 @@ class Palma{
 
         //START of IF-STATEMENT:
         if(classification != "command"){
-            Torch().torch(context, aiKey, messageKey, prompt)
+            Prompt(context).writePrompt(aiKey, messageKey, prompt)
         }//END of IF-STATEMENT
 
         //START of IF-STATEMENT:
